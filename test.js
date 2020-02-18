@@ -1,4 +1,4 @@
-import { epoch, fft, alphaPower } from "@neurosity/pipes";
+import { averagePower } from "@neurosity/pipes/src/pipes/frequency/averagePower.js"
 
 function main() {
   eeg$

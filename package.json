@@ -1,0 +1,26 @@
+{
+  "name": "neurofeedback",
+  "version": "1.0.0",
+  "description": "",
+  "main": "brainwaves.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node brainwaves.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gerardklee/neurofeedback.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gerardklee/neurofeedback/issues"
+  },
+  "homepage": "https://github.com/gerardklee/neurofeedback#readme",
+  "dependencies": {
+    "@neurosity/pipes": "^3.2.3",
+    "csv-writer": "^1.6.0",
+    "openbci-observable": "^1.0.5",
+    "socket.io": "^1.7.4"
+  }
+}

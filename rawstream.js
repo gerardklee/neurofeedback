@@ -1,9 +1,11 @@
+const localPath = '/Users/gerardlee/Desktop/raw.csv'
 const Wifi = require('@openbci/wifi');
+const shield = 'OpenBCI-9630';
 const OpenBCIConsts = require("openbci-utilities").Constants;
 const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 const csvWriter = createCsvWriter({
-  path: '/Users/gerardlee/Desktop/raw.csv',
-  header: ['FIRST CHANNEL']
+  path: localPath,
+  header: ['t', 'sample']
 });
 
 function init() {
@@ -12,15 +14,16 @@ function init() {
         verbose: true,
         latency: 5
     });
-
+    let t = 0;
     wifi.on('sample',(sample) => {
         try {
-          const firstChannel = [[-sample.channelData[0]]];
+          const records = [[t, -sample.channelData[0]/1000000]];
+          t += 0.004;
           console.log("raw data: "); 
-          console.log(firstChannel);
-          csvWriter.writeRecords(firstChannel)
+          console.log(-sample.channelData[0]/1000000);
+          csvWriter.writeRecords(records)
             .then(() => {
-              console.log('recorded');
+              
             });
         } catch (err) {
           console.log(err);
@@ -28,9 +31,9 @@ function init() {
     })
 
     wifi.searchToStream({
-        sampleRate: 250, // Custom sample rate
-        shieldName: 'OpenBCI-9630', // Enter the unique name for your wifi shield
-        streamStart: true // Call to start streaming in this function
+        sampleRate: 250, 
+        shieldName: shield, 
+        streamStart: true
       }).catch(console.log);
    
 }
