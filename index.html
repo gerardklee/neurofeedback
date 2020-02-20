@@ -1,8 +1,95 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>Alpha Wave Graph</title>
-        <h1>woddw</h1>
-        <script type="module" src="/users/gerardlee/desktop/git/neurofeedback/brainwaves.js"></script>
+        <title>Neurofeedback</title>
     </head>
+    <body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+        <canvas id="myChart"></canvas>
+        <div>
+            <script>
+                console.log("on the browser console");
+                var socket = io('http://localhost:3000');
+                var ctx = document.getElementById('myChart').getContext('2d');
+
+                var barChartData = {
+                    labels: ['Alpha Waves'],
+                    datasets: [
+                        {
+                            label: '7Hz',
+                            backgroundColor: '#AF7',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                        {
+                            label: '8Hz',
+                            backgroundColor: '#FA4',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                        {
+                            label: '9Hz',
+                            backgroundColor: '#FF7',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                        {
+                            label: '10Hz',
+                            backgroundColor: '#2A7',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                        {
+                            label: '11Hz',
+                            backgroundColor: '#9400D3',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                        {
+                            label: '12Hz',
+                            backgroundColor: '#00FFFF',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                        {
+                            label: '13Hz',
+                            backgroundColor: '#0000A0',
+                            borderWidth: 5,
+                            data: [1]
+                        },
+                    ]
+                };
+                console.log(barChartData);
+
+                var myBarChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: barChartData,
+                    options: {
+                        title: {
+                            display: true,
+                            text: "Bar Chart",
+                            fontSize: 14,
+                            fontFamily: 'Arial',
+                            fontColor: '#FF0000'
+                        },
+
+                        legend: {
+                            display: true
+                        }
+                    }
+                });
+                console.log(myBarChart);
+
+                socket.on('data', function (data) {
+                    
+                });  
+            </script>
+        </div>
+        <div>
+            <script>
+                var socket = io('http://localhost:3000');
+            </script>
+        </div>
+    </body>
 </html>
