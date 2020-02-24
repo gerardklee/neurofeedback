@@ -83,23 +83,18 @@
 
             socket.on('fft_data', function(fft_data) {
                 //console.log("start updating bar chart");
-                //updateBarChart(barChart, fft_data);
+                //updateBarChart(barChart, fft_data); // line 156
             });  
 
-            updateBarChart = function(barChart, fft_data) {
-                for (var i = 0; i < barChart.data.datasets.length; i++) {
-                    barChart.data.datasets[i].data.pop();
-                    barChart.data.datasets[i].data.push(fft_data.psd[0][i]);
-                }
-                barChart.update();
-            }
         </script>
         <p>Line Chart</p>
-        <script>                                        
-            var n      = 5,
-                random = d3.randomNormal(0, .5),
-                data   = d3.range(n).map(random);
+        <script>                     
+            var n      = 40,
+                random = d3.randomNormal(5, 10),
+                //data   = d3.range(n).map(random);
+                data = [1, 2, 3, 4, 5];
             
+            console.log(data);
             var step = 10;
 
             var margin = {top: 50, right: 50, bottom: 50, left: 50},
@@ -139,36 +134,36 @@
             canvas.append("g")
                   .attr("class", "y axis")
                   .call(d3.axisLeft(yScale)); // create axis on the left given the scale for y-axis
-            
-            console.log(data);
+
             var path = canvas.append("g")
                             .append("path")
-                            .datum(data)
+                            .data([data])
                             .attr("class", "line")
                             .attr("d", line);
 
             socket.on('fft_data', function(fft_data) {
                 console.log("start updating line chart");
-                var averageAlpha = getAlphaAverage(fft_data.psd[0])
-                
-                //updateLineChart(averageAlpha);
-                tick(fft_data.psd[0][0])
-            });  
-            
-            function tick(value) {
-                console.log(value);
-                data.push(value);
-                console.log(typeof random());
+                var averageAlpha = getAlphaAverage(fft_data.psd[0]);
+                data.push(averageAlpha);
                 path.attr("d", line)
                     .attr("transform", null)
                     .transition()
-                    .duration(500)
+                    .duration(100)
                     .ease(d3.easeLinear)
                     .attr("transform", "translate(" + xScale(-1) + ",0)")
-                    .on("end", tick);
                 data.shift();
+            });  
+
+            // FUNCTIONS FOR BAR CHART
+            function updateBarChart(barChart, fft_data) {
+                for (var i = 0; i < barChart.data.datasets.length; i++) {
+                    barChart.data.datasets[i].data.pop();
+                    barChart.data.datasets[i].data.push(fft_data.psd[0][i]);
+                }
+                barChart.update();
             }
 
+            // FUNCTIONS FOR LINE CHART
             function updateLineChart(value) {
                 data.push(value);
                 path.attr("d", line)
@@ -178,6 +173,18 @@
                     .ease(d3.easeLinear)
                     .attr("transform", "translate(" + xScale(-1) + ",0)")
                     .on("end", updateLineChart);
+                data.shift();
+            }
+
+            function tick() {
+                //console.log(typeof random());
+                path.attr("d", line)
+                    .attr("transform", null)
+                    .transition()
+                    .duration(500)
+                    .ease(d3.easeLinear)
+                    .attr("transform", "translate(" + xScale(-1) + ",0)")
+                    .on("end", tick);
                 data.shift();
             }
 

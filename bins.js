@@ -1,6 +1,5 @@
 const { Wifi } = require('openbci-observable');
 const { voltsToMicrovolts, bufferFFT, powerByBand, sliceFFT, epoch, fft } = require('@neurosity/pipes');
-
 const server = require('http').createServer();
 const io = require('socket.io')(server);
 io.on('connection', client => {
@@ -19,13 +18,13 @@ async function init () {
 
     // Bins = FFT Size / 2
     // Frequency Resolution = Sampling Rate / FFT Size
-    // In this case, FFT Size = 256, Sampling Rate = 256
-    // FR = 1
+    // In this case, FFT Size = 1024, Sampling Rate = 256
+    // FR = 0.25
     
     wifi.stream.pipe(
         voltsToMicrovolts(),
         epoch({ duration: 256, interval: 100, samplingRate: 256 }),
-        fft({ bins: 256}),
+        fft({ bins: 256 }),
         sliceFFT([7, 13])
     ).subscribe(data => 
         {
@@ -37,6 +36,6 @@ async function init () {
 async function start() {
     //init();
     server.listen(3000);
-    setInterval(() => io.emit("data", data1), 1000);
+    setInterval(() => io.emit('fft_data', data1), 1000);
 }
 start();
