@@ -24,18 +24,19 @@ async function init () {
     wifi.stream.pipe(
         voltsToMicrovolts(),
         epoch({ duration: 256, interval: 100, samplingRate: 256 }),
-        fft({ bins: 256 }),
+        fft({ bins: 1024 }),
         sliceFFT([7, 13])
     ).subscribe(data => 
         {
             io.emit("data", data);
+            console.log(data);
         }
     );
 }
 
 async function start() {
-    //init();
+    init();
     server.listen(3000);
-    setInterval(() => io.emit('fft_data', data1), 1000);
+    //setInterval(() => io.emit('fft_data', data1), 1000);
 }
 start();
