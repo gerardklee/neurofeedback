@@ -3,20 +3,34 @@
     <head>
         <title>Neurofeedback</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
     <body>
-        <div class="mx-auto" style="width: 100%">
-            <button type="button" class="btn btn-success" id="bar">Bar Chart</button>
-            <button type="button" class="btn btn-success" id="line">Line Chart</button>
+        <div id="background">
+                <button type="button" class="fa fa-users" style="font-size:48px" id="brain"></button>
+        </div>
+        <br>
+        <div id="sound">
+            <button type="button" class="fa fa-volume-up" style="font-size:48px" id="sound-on"></button>
+            <button type="button" class="fa fa-volume-off" style="font-size:48px" id="sound-off"></button>
+        </div>
+        <br>
+        <div id="charts">
+            <button type="button" class="fa fa-bar-chart" style="font-size:48px" id="bar"></button>
+            <button type="button" class="fa fa-line-chart" style="font-size:48px" id="line"></button>
+            <button type="button" class="fa fa-pie-chart" style="font-size:48px" id="pie"></button>
         </div>
         <br>
         <div>
             <canvas id="barChart" style="display: none"></canvas>
             <canvas id="lineChart" style="display: none"></canvas>
+            <canvas id="sound"><</canvas>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
         <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/SoundJS/1.0.2/soundjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.5.35/Tone.js"></script>
         <script>
             $(document).ready(function() {
                 $("#bar").click(function() {
@@ -28,182 +42,186 @@
                     $("#lineChart").show();
                     $("#barChart").hide();
                 });
+
+                $("#brain").click(function() {
+                    $("#lineChart").hide();
+                    $("#barChart").hide();
+                })
             });
-            
-            console.log("bar chart");
+
             var socket = io('http://localhost:3000');
             var ctx = document.getElementById('barChart').getContext('2d');
 
-            // bar chart
+            // BAR CHART USING CHART
             var barChartData = {
-                labels: ['Alpha Waves'],
+                labels: [],
                 datasets: [
                     {
                         label: '7Hz',
                         backgroundColor: '#AF7', // lime green
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },                        {
                         label: '7.25Hz',
                         backgroundColor: '#AF7',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '7.5Hz',
                         backgroundColor: '#AF7',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '7.75Hz',
                         backgroundColor: '#AF7',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '8Hz',
                         backgroundColor: '#9400D3', // purple
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '8.25Hz',
                         backgroundColor: '#9400D3',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '8.5Hz',
                         backgroundColor: '#9400D3',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '8.75Hz',
                         backgroundColor: '#9400D3',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '9Hz',
                         backgroundColor: '#00FFFF', // sky blue
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '9.25Hz',
                         backgroundColor: '#00FFFF',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '9.5Hz',
                         backgroundColor: '#00FFFF',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '9.75Hz',
                         backgroundColor: '#00FFFF',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '10Hz',
                         backgroundColor: '#0000A0', // blue
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '10.25Hz',
                         backgroundColor: '#0000A0',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '10.5Hz',
                         backgroundColor: '#0000A0',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '10.75Hz',
                         backgroundColor: '#0000A0',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '11Hz',
                         backgroundColor: '#FFFF00', // yellow
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '11.25Hz',
                         backgroundColor: '#FFFF00',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '11.5Hz',
                         backgroundColor: '#FFFF00',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '11.75Hz',
                         backgroundColor: '#FFFF00',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '12Hz',
                         backgroundColor: '#008000', // green
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '12.25Hz',
                         backgroundColor: '#008000', 
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '12.5Hz',
                         backgroundColor: '#008000',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '12.75Hz',
                         backgroundColor: '#008000',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '13Hz',
                         backgroundColor: '#FFA500', // orange
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '13.25Hz',
                         backgroundColor: '#FFA500', 
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '13.5Hz',
                         backgroundColor: '#FFA500',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     },
                     {
                         label: '13.75Hz',
                         backgroundColor: '#FFA500',
                         borderWidth: 5,
-                        data: [1]
+                        data: []
                     }
                 ]
             };
@@ -312,11 +330,25 @@
                 }
             });
 
+            // FEEDBACK USING TONE.JS
+            // USE PLAYER, PLAYBACK RATE
+            const synth = new Tone.Synth().toDestination();
+            const loop = new Tone.Loop(time => {
+                synth.triggerAttackRelease("C2", "8n", time);
+            }, "4n");
+
+            document.getElementById('sound-on').addEventListener('click', async() => {
+                Tone.start();
+                synth.triggerAttackRelease("C4", "8n");
+                console.log("audio ready");
+            });
+
             socket.on('fft_data', function(fft_data) {
-                updateBarChart(barChart, fft_data);
-                //updateLineChart(fft_data);
-                updateLineChart2(lineChart, fft_data);
+                //updateBarChart(barChart, fft_data);
+                //updateLineChart2(lineChart, fft_data);
             });  
+
+            // FUNCTIONS FOR SOUND
 
             // FUNCTIONS FOR BAR CHART
             function updateBarChart(barChart, fft_data) {
