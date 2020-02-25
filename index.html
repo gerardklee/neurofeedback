@@ -2,16 +2,34 @@
 <html>
     <head>
         <title>Neurofeedback</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     </head>
-    <p>Bar Chart</p>
     <body>
+        <div class="mx-auto" style="width: 100%">
+            <button type="button" class="btn btn-success" id="bar">Bar Chart</button>
+            <button type="button" class="btn btn-success" id="line">Line Chart</button>
+        </div>
+        <br>
+        <div>
+            <canvas id="barChart" style="display: none"></canvas>
+            <canvas id="lineChart" style="display: none"></canvas>
+        </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
-        <script src="https://d3js.org/d3.v5.min.js"></script>
-        <script src="https://d3js.org/d3-random.v2.min.js"></script>
-        <script src="/Users/gerardlee/Desktop/git/neurofeedback/node_modules/rickshaw/rickshaw.min.js"></script>
-        <canvas id="barChart"></canvas>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
         <script>
+            $(document).ready(function() {
+                $("#bar").click(function() {
+                    $("#barChart").show();
+                    $("#lineChart").hide();
+                });
+
+                $("#line").click(function() {
+                    $("#lineChart").show();
+                    $("#barChart").hide();
+                });
+            });
+            
             console.log("bar chart");
             var socket = io('http://localhost:3000');
             var ctx = document.getElementById('barChart').getContext('2d');
@@ -208,14 +226,8 @@
                 }
             });
 
-            socket.on('fft_data', function(fft_data) {
-                //console.log("start updating bar chart");
-                //updateBarChart(barChart, fft_data);
-            });  
-
-        </script>
-        <p>Line Chart</p>
-        <script>                     
+            /**
+            // LINE CHART USING D3
             var n      = 40,
                 random = d3.randomNormal(5, 10),
                 //data   = d3.range(n).map(random);
@@ -237,6 +249,7 @@
                     .domain([d3.min(data), d3.max(data)])
                     .range([height, 0]);
 
+        
             var line = d3.line()
                     .x(function(d, i) { return xScale(i); })
                     .y(function(d, i) { return yScale(d); })
@@ -272,16 +285,43 @@
                             .attr("fill", "none")
                             .attr("stroke", "black")
                             .data([data]);
-                            
+            **/
+
+            // LINE CHART USING CHART.JS
+            var ctx2 = document.getElementById('lineChart').getContext('2d');
+            var counter = 0;
+            Chart.defaults.global.animation.duration = 50;
+            var lineChart = new Chart(ctx2, {
+                type: 'line',
+                data: {datasets: [{
+                    label: "Average Alpha Wave",
+                    data: []
+                }]},
+                options: {
+                    title: {
+                        display: false,
+                        text: "Line Chart",
+                        fontSize: 14,
+                        fontFamily: 'Arial',
+                        fontColor: '#FF0000'
+                    },
+
+                    legend: {
+                        display: false
+                    }
+                }
+            });
+
             socket.on('fft_data', function(fft_data) {
-                updateLineChart(fft_data);
+                updateBarChart(barChart, fft_data);
+                //updateLineChart(fft_data);
+                updateLineChart2(lineChart, fft_data);
             });  
 
             // FUNCTIONS FOR BAR CHART
             function updateBarChart(barChart, fft_data) {
                 for (var i = 0; i < barChart.data.datasets.length; i++) {
-                    barChart.data.datasets[i].data.pop();
-                    barChart.data.datasets[i].data.push(fft_data.psd[0][i]);
+                    barChart.data.datasets[i].data[0] = fft_data.psd[0][i];
                 }
                 barChart.update();
             }
@@ -302,13 +342,27 @@
             function getAlphaAverage(fft_data) {
                 var total = 0;
                 var average = 0;
-                var totalNumberofFrequencies = 7
-                for (var i = 0; i < fft_data.length; i++) {
-                    total += fft_data[i];
+                var totalNumberofFrequencies = 28;
+                for (var i = 0; i < fft_data.psd[0].length; i++) {
+                    total += fft_data.psd[0][i];
                 }
                 average = total / totalNumberofFrequencies;
                 return average;
             }
-        </script>  
+
+            // FUNCTIONS FOR LINE CHART (CHART.JS)
+            function updateLineChart2(lineChart, fft_data) {
+                var averageAlpha = getAlphaAverage(fft_data);
+                var length = 100;
+                //console.log(lineChart.data.datasets[0].data);
+                if (lineChart.data.datasets[0].data.length == length) {
+                    lineChart.data.datasets[0].data.shift();
+                    lineChart.data.labels.shift();
+                }
+                lineChart.data.datasets[0].data.push(Math.random() * 10);
+                lineChart.data.labels.push(counter++);
+                lineChart.update();
+            }
+        </script>
     </body>   
 </html>
