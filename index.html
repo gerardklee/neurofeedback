@@ -3,6 +3,7 @@
     <head>
         <title>Neurofeedback</title>
     </head>
+    <p>Bar Chart</p>
     <body>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
@@ -194,7 +195,7 @@
                 data: barChartData,
                 options: {
                     title: {
-                        display: true,
+                        display: false,
                         text: "Bar Chart",
                         fontSize: 14,
                         fontFamily: 'Arial',
@@ -209,7 +210,7 @@
 
             socket.on('fft_data', function(fft_data) {
                 //console.log("start updating bar chart");
-                //updateBarChart(barChart, fft_data); // line 156
+                //updateBarChart(barChart, fft_data);
             });  
 
         </script>
@@ -218,7 +219,7 @@
             var n      = 40,
                 random = d3.randomNormal(5, 10),
                 //data   = d3.range(n).map(random);
-                data = [1, 2, 3, 4, 5];
+                data = [16, 17, 18, 19, 20, 16.5, 17.5, 18, 19, 18.5];
             
             console.log(data);
             var step = 10;
@@ -238,7 +239,8 @@
 
             var line = d3.line()
                     .x(function(d, i) { return xScale(i); })
-                    .y(function(d, i) { return yScale(d); });
+                    .y(function(d, i) { return yScale(d); })
+                    .curve(d3.curveMonotoneX);
 
             var canvas = d3.select("body").append("svg")
                                         .attr("width", width + margin.left + margin.right)
@@ -246,38 +248,33 @@
                                         .append("g")
                                         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");                      
              
+            // set the canvas to draw
             canvas.append("defs").append("clipPath")
                                 .attr("id", "clip")
                                 .append("rect")
                                 .attr("width", width)
-                                .attr("height", height)
+                                .attr("height", height);
             
+            // manipulate x-axis
             canvas.append("g")
                   .attr("class", "x axis")
                   .attr("transform", "translate(0, " + height + ")")
                   .call(d3.axisBottom(xScale)); // create axis on the bottom given the scale for x-axis
 
+            // manipulate y-axis
             canvas.append("g")
                   .attr("class", "y axis")
                   .call(d3.axisLeft(yScale)); // create axis on the left given the scale for y-axis
 
+            // path is filled by default. set the fill to none and stroke to black to get rid of fill.
             var path = canvas.append("g")
                             .append("path")
-                            .data([data])
-                            .attr("class", "line")
-                            .attr("d", line);
-
+                            .attr("fill", "none")
+                            .attr("stroke", "black")
+                            .data([data]);
+                            
             socket.on('fft_data', function(fft_data) {
-                console.log("start updating line chart");
-                var averageAlpha = getAlphaAverage(fft_data.psd[0]);
-                data.push(averageAlpha);
-                path.attr("d", line)
-                    .attr("transform", null)
-                    .transition()
-                    .duration(100)
-                    .ease(d3.easeLinear)
-                    .attr("transform", "translate(" + xScale(-1) + ",0)")
-                data.shift();
+                updateLineChart(fft_data);
             });  
 
             // FUNCTIONS FOR BAR CHART
@@ -290,27 +287,15 @@
             }
 
             // FUNCTIONS FOR LINE CHART
-            function updateLineChart(value) {
-                data.push(value);
+            function updateLineChart(fft_data) {
+                var averageAlpha = getAlphaAverage(fft_data.psd[0]);
+                data.push(averageAlpha);
                 path.attr("d", line)
                     .attr("transform", null)
                     .transition()
                     .duration(100)
                     .ease(d3.easeLinear)
                     .attr("transform", "translate(" + xScale(-1) + ",0)")
-                    .on("end", updateLineChart);
-                data.shift();
-            }
-
-            function tick() {
-                //console.log(typeof random());
-                path.attr("d", line)
-                    .attr("transform", null)
-                    .transition()
-                    .duration(500)
-                    .ease(d3.easeLinear)
-                    .attr("transform", "translate(" + xScale(-1) + ",0)")
-                    .on("end", tick);
                 data.shift();
             }
 
