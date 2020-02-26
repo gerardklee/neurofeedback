@@ -24,8 +24,10 @@
         <div>
             <canvas id="barChart" style="display: none"></canvas>
             <canvas id="lineChart" style="display: none"></canvas>
+            <canvas id="pieChart" style="display: none"></canvas>
             <canvas id="sound"><</canvas>
         </div>
+        
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
         <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -34,18 +36,67 @@
         <script>
             $(document).ready(function() {
                 $("#bar").click(function() {
+                    $("#bar").css({"font-size": "60px"});
+                    $("#line").css({"font-size": "48px"});
+                    $("#pie").css({"font-size": "48px"});
+                    $("#sound-on").css({"font-size": "48px"});
+                    $("#sound-off").css({"font-size": "48px"});
                     $("#barChart").show();
                     $("#lineChart").hide();
+                    $("#pieChart").hide();
+
                 });
 
                 $("#line").click(function() {
+                    $("#bar").css({"font-size": "48px"});
+                    $("#line").css({"font-size": "60px"});
+                    $("#pie").css({"font-size": "48px"});
+                    $("#sound-on").css({"font-size": "48px"});
+                    $("#sound-off").css({"font-size": "48px"});
                     $("#lineChart").show();
                     $("#barChart").hide();
+                    $("#pieChart").hide();
+                });
+
+                $("#pie").click(function() {
+                    $("#bar").css({"font-size": "48px"});
+                    $("#line").css({"font-size": "48px"});
+                    $("#pie").css({"font-size": "60px"});
+                    $("#sound-on").css({"font-size": "48px"});
+                    $("#sound-off").css({"font-size": "48px"});
+                    $("#lineChart").show();
+                    $("#barChart").hide();
+                    $("#pieChart").hide();
                 });
 
                 $("#brain").click(function() {
+                    $("#bar").css({"font-size": "48px"});
+                    $("#line").css({"font-size": "48px"});
+                    $("#pie").css({"font-size": "48px"});
+                    $("#sound-on").css({"font-size": "48px"});
+                    $("#sound-off").css({"font-size": "48px"});
                     $("#lineChart").hide();
                     $("#barChart").hide();
+                    $("#pieChart").hide();
+                    
+                });
+
+                $("#sound-on").click(function() {
+                    $("#bar").css({"font-size": "48px"});
+                    $("#line").css({"font-size": "48px"});
+                    $("#pie").css({"font-size": "48px"});
+                    $("#sound-on").css({"font-size": "60px"});
+                    $("#sound-off").css({"font-size": "48px"});
+                    playMusic();
+                });
+
+                $("#sound-off").click(function() {
+                    $("#bar").css({"font-size": "48px"});
+                    $("#line").css({"font-size": "48px"});
+                    $("#pie").css({"font-size": "48px"});
+                    $("#sound-on").css({"font-size": "48px"});
+                    $("#sound-off").css({"font-size": "60px"});
+                    stopMusic();
                 })
             });
 
@@ -332,15 +383,23 @@
 
             // FEEDBACK USING TONE.JS
             // USE PLAYER, PLAYBACK RATE
-            const synth = new Tone.Synth().toDestination();
-            const loop = new Tone.Loop(time => {
-                synth.triggerAttackRelease("C2", "8n", time);
-            }, "4n");
+            var player = new Tone.Player({
+                "url": "https://raw.githubusercontent.com/Tonejs/Tone.js/master/examples/audio/FWDL.mp3",
+                "playbackRate": 1.5,
+                "loop": true,
+                "autostart": true,
+                "loopStart": 0,
+                "loopEnd": 0
+            });
 
-            document.getElementById('sound-on').addEventListener('click', async() => {
+            document.getElementById('sound-on').addEventListener('click', function() {
+                player.loop = true;
+                player.toDestination();
                 Tone.start();
-                synth.triggerAttackRelease("C4", "8n");
-                console.log("audio ready");
+            });
+
+            document.getElementById('sound-off').addEventListener('click', function() {
+                player.loop = false;
             });
 
             socket.on('fft_data', function(fft_data) {
@@ -349,7 +408,16 @@
             });  
 
             // FUNCTIONS FOR SOUND
+            function playMusic() {
+                player.loop = true;
+                player.toDestination();
+                player.start();
+            }
 
+            function stopMusic() {
+                player.loop = false;
+                console.log("stop");
+            }
             // FUNCTIONS FOR BAR CHART
             function updateBarChart(barChart, fft_data) {
                 for (var i = 0; i < barChart.data.datasets.length; i++) {
