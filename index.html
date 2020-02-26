@@ -383,14 +383,27 @@
 
             // BAR CHART USING CHART.JS
             var ctx3 = document.getElementById('pieChart').getContext('2d');
+            var tracker = 1;
             var pieChart = new Chart(ctx3, {
-                type: 'pie',
+                type: 'doughnut',
                 data: {
-                    labels: ['a', 'b', 'c', 'd', 'e'],
+                    labels: ['7Hz', '7.25Hz', '7.5Hz', '7.75HZ',
+                             '8Hz', '8.25Hz', '8.5Hz', '8.75HZ',
+                             '9Hz', '9.25Hz', '9.5Hz', '9.75HZ',
+                             '10Hz', '10.25Hz', '10.5Hz', '10.75HZ',
+                             '11Hz', '11.25Hz', '11.5Hz', '11.75HZ',
+                             '12Hz', '12.25Hz', '12.5Hz', '12.75HZ',
+                             '13Hz', '13.25Hz', '13.5Hz', '13.75HZ', ],
                     datasets: [{
-                        data: [1, 2, 3, 4, 5],
- 
-                        backgroundColor: ['#e91e63', '#00e676', '#ff5722', '#1e88e5', '#ffd600'],
+                        //data: [1, 2, 3, 4, 5, 6, 7,
+                               //8, 9, 10, 11, 12, 13, 14,
+                               //15, 16, 17, 18, 19, 20, 21,
+                               //22, 23, 24, 25, 26, 27, 28],
+                        data: [],
+                        backgroundColor: ['#330000', '#FF0000', '#663300', '#FF8000', '#FFE5CC', '#333300', '#666600', 
+                                          '#999900', '#FFFF00', '#66CC00', '#006666', '#00FFFF', '#003366', '#0080FF',
+                                          '#99CCFF', '#0000CC', '#6600CC', '#9933FF', '#CC00CC', '#FF99FF', '#CC0066',
+                                          '#FF99CC', '#000000', '#606060', '#C0C0C0', '#FFCCFF', '#FFA500', '#FFFFFF'],
                         borderWidth: 0.5,
                         borderColor: '#ddd'
                     }]
@@ -500,10 +513,17 @@
 
             // FUNCTIONS FOR PIE CHART
             function updatePieChart(pieChart, fft_data) {
+                console.log(pieChart.data.datasets[0].data[0]);
                 for (var i = 0; i < fft_data.psd[0].length; i++) {
-                    pieChart.data.datasets[i].data[0] = Math.random() * 10;
+                    if (tracker == 1) {
+                        pieChart.data.datasets[0].data.push(Math.random() * 10);
+                    } else {
+                        pieChart.data.datasets[0].data[i] = Math.random() * 10;
+                    }
+                    tracker++;
                 }
                 pieChart.update();
+                
             }
         </script>
     </body>   
