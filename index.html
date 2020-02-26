@@ -64,9 +64,9 @@
                     $("#pie").css({"font-size": "60px"});
                     $("#sound-on").css({"font-size": "48px"});
                     $("#sound-off").css({"font-size": "48px"});
-                    $("#lineChart").show();
+                    $("#lineChart").hide();
                     $("#barChart").hide();
-                    $("#pieChart").hide();
+                    $("#pieChart").show();
                 });
 
                 $("#brain").click(function() {
@@ -381,6 +381,28 @@
                 }
             });
 
+            // BAR CHART USING CHART.JS
+            var ctx3 = document.getElementById('pieChart').getContext('2d');
+            var pieChart = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: ['a', 'b', 'c', 'd', 'e'],
+                    datasets: [{
+                        data: [1, 2, 3, 4, 5],
+ 
+                        backgroundColor: ['#e91e63', '#00e676', '#ff5722', '#1e88e5', '#ffd600'],
+                        borderWidth: 0.5,
+                        borderColor: '#ddd'
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true
+                    }
+                }
+            })
+
+
             // FEEDBACK USING TONE.JS
             // USE PLAYER, PLAYBACK RATE
             /**
@@ -404,12 +426,11 @@
             var now = Tone.now();
             var maxFrequency = 400;
             var minFrequency = 50;
-
+            
             socket.on('fft_data', function(fft_data) {
                 //updateBarChart(barChart, fft_data);
                 //updateLineChart2(lineChart, fft_data);
-                //console.log(fft_data.psd[0][0]);
-
+                //updatePieChart(pieChart, fft_data);
                 //console.log(fft_data.psd[0][0]);
                 //playMusic();
 
@@ -439,7 +460,7 @@
                 barChart.update();
             }
 
-            // FUNCTIONS FOR LINE CHART
+            // FUNCTIONS FOR LINE CHART (D3.JS)
             function updateLineChart(fft_data) {
                 var averageAlpha = getAlphaAverage(fft_data.psd[0]);
                 data.push(averageAlpha);
@@ -475,6 +496,14 @@
                 lineChart.data.datasets[0].data.push(Math.random() * 10);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
+            }
+
+            // FUNCTIONS FOR PIE CHART
+            function updatePieChart(pieChart, fft_data) {
+                for (var i = 0; i < fft_data.psd[0].length; i++) {
+                    pieChart.data.datasets[i].data[0] = Math.random() * 10;
+                }
+                pieChart.update();
             }
         </script>
     </body>   
