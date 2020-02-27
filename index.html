@@ -19,7 +19,6 @@
                     <br>
                     <p>Value: <span id="value"></span></p>
                     <input type="range" min="1" max="100" value="1" id="myRange" class="slider">
-
             </div>
         </div>
         <br>
@@ -43,16 +42,7 @@
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
         
         <script>
-            var slider = document.getElementById("myRange");
-            var output = document.getElementById("value");
-
-            output.innerHTML = slider.value;
-            slider.oninput = function() {
-                output.innerHTML = this.value;
-            }
-            
             $(document).ready(function() {
-                console.log("jquery starts");
                 $("#bar").click(function() {
                     $("#bar").css({"font-size": "60px"});
                     $("#line").css({"font-size": "48px"});
@@ -431,7 +421,7 @@
                         display: true
                     }
                 }
-            })
+            });
 
 
             // FEEDBACK USING TONE.JS
@@ -450,25 +440,52 @@
             mockData = [];
             var player = new Tone.Oscillator({
                 type: "sine",
-                frequency: 200,
-                volume: 5,
+                frequency: 1000,
+                volume: -50,
                 mute: false
             });
 
             var now = Tone.now();
             var maxFrequency = 400;
             var minFrequency = 50;
-            console.log("before socket");
+
+            var slider = document.getElementById("myRange");
+            var output = document.getElementById("value");
+            
+            var current = 1;
+            var before = 0;
+            var maxVolume = 5;
+            var minVolume = -50;
             $("#sound-on").click(function() {
                 player.toDestination().start();
                 socket.on('fft_data', function(fft_data) {
                     //updateBarChart(barChart, fft_data);
                     //updateLineChart(lineChart, fft_data);
                     //updatePieChart(pieChart, fft_data);
-                    console.log(player.volume.value);
 
-                })
-            }) 
+                    // changing volume
+                    output.innerHTML = slider.value;
+                    slider.oninput = function() {
+                        output.innerHTML = this.value;
+                        if (this.value > current) {
+                            player.volume.value += 0.63;
+                            if (player.volume.value > maxVolume) {
+                                player.volume.value = maxVolume;
+                            }
+                            before = current;
+                            current = this.value;
+                        } else if (this.value < current) {
+                            player.volume.value -= 0.63;
+                            if (player.volume.value < minVolume) {
+                                player.volume.value = minVolume;
+                            }
+                            before = current;
+                            current = this.value;
+                        }
+                    };
+                    console.log(player.volume.value);
+                });
+            });
 
             // FUNCTIONS FOR SOUND
             function playMusic() {
