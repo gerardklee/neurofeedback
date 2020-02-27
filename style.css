@@ -1,0 +1,26 @@
+.sliceContainer {
+    width: 50%;
+}
+.p {
+    opacity: 0.7;
+}
+
+.slider::before {
+    content: '0';
+    font-size: 1rem;
+    position: absolute;
+    top: 21%;
+
+}
+.slider::after {
+    content: '100';
+    font-size: 1rem;
+    position: absolute;
+    left: 30%;
+    top: 21%;
+}
+
+.slider {
+    width: 30%;
+    height: 20px;
+}
