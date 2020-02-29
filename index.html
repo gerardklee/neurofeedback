@@ -1,31 +1,25 @@
 <!DOCTYPE HTML>
+
 <html>
     <head>
         <title>Neurofeedback</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">    
         <link href="style.css" type="text/css" rel="stylesheet">
-        
     </head>
-    <body>
+    <body class="page">
         <div id="background">
-                <button type="button" class="fa fa-users" style="font-size:48px" id="brain"></button>
+            <button type="button" class="fa fa-users" style="font-size:20px" id="brain"></button>
+            <button type="button" class="fa fa-volume-up" style="font-size:20px" id="sound-on"></button>
+            <button type="button" class="fa fa-volume-off" style="font-size:20px" id="sound-off"></button>
+            <button type="button" class="fa fa-bar-chart" style="font-size:20px" id="bar"></button>
+            <button type="button" class="fa fa-line-chart" style="font-size:20px" id="line"></button>
+            <button type="button" class="fa fa-pie-chart" style="font-size:20px" id="pie"></button>
         </div>
-        <br>
-        <div id="sound">
-            <button type="button" class="fa fa-volume-up" style="font-size:48px" id="sound-on"></button>
-            <button type="button" class="fa fa-volume-off" style="font-size:48px" id="sound-off"></button>
-            <div class="slideContainer">
-                    <br>
-                    <p>Value: <span id="value"></span></p>
-                    <input type="range" min="1" max="100" value="1" id="myRange" class="slider">
-            </div>
-        </div>
-        <br>
-        <div id="charts">
-            <button type="button" class="fa fa-bar-chart" style="font-size:48px" id="bar"></button>
-            <button type="button" class="fa fa-line-chart" style="font-size:48px" id="line"></button>
-            <button type="button" class="fa fa-pie-chart" style="font-size:48px" id="pie"></button>
+        <div class="slideContainer">
+            <br>
+            <p>Value: <span id="value"></span></p>
+            <input type="range" min="1" max="100" value="1" id="myRange" class="slider">
         </div>
         <br>
         <div>
@@ -37,18 +31,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/SoundJS/1.0.2/soundjs.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.5.35/Tone.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.5.38/Tone.js"></script>
         <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
         
         <script>
+            console.log("connected server");
             $(document).ready(function() {
                 $("#bar").click(function() {
-                    $("#bar").css({"font-size": "60px"});
-                    $("#line").css({"font-size": "48px"});
-                    $("#pie").css({"font-size": "48px"});
-                    $("#sound-on").css({"font-size": "48px"});
-                    $("#sound-off").css({"font-size": "48px"});
+                    $("#bar").css({"font-size": "30px"});
+                    $("#line").css({"font-size": "20px"});
+                    $("#pie").css({"font-size": "20px"});
+                    $("#sound-on").css({"font-size": "20px"});
+                    $("#sound-off").css({"font-size": "20px"});
                     $("#barChart").show();
                     $("#lineChart").hide();
                     $("#pieChart").hide();
@@ -56,33 +51,33 @@
                 });
 
                 $("#line").click(function() {
-                    $("#bar").css({"font-size": "48px"});
-                    $("#line").css({"font-size": "60px"});
-                    $("#pie").css({"font-size": "48px"});
-                    $("#sound-on").css({"font-size": "48px"});
-                    $("#sound-off").css({"font-size": "48px"});
+                    $("#bar").css({"font-size": "20px"});
+                    $("#line").css({"font-size": "30px"});
+                    $("#pie").css({"font-size": "20px"});
+                    $("#sound-on").css({"font-size": "20px"});
+                    $("#sound-off").css({"font-size": "20px"});
                     $("#lineChart").show();
                     $("#barChart").hide();
                     $("#pieChart").hide();
                 });
 
                 $("#pie").click(function() {
-                    $("#bar").css({"font-size": "48px"});
-                    $("#line").css({"font-size": "48px"});
-                    $("#pie").css({"font-size": "60px"});
-                    $("#sound-on").css({"font-size": "48px"});
-                    $("#sound-off").css({"font-size": "48px"});
+                    $("#bar").css({"font-size": "20px"});
+                    $("#line").css({"font-size": "20px"});
+                    $("#pie").css({"font-size": "30px"});
+                    $("#sound-on").css({"font-size": "20px"});
+                    $("#sound-off").css({"font-size": "20px"});
                     $("#lineChart").hide();
                     $("#barChart").hide();
                     $("#pieChart").show();
                 });
 
                 $("#brain").click(function() {
-                    $("#bar").css({"font-size": "48px"});
-                    $("#line").css({"font-size": "48px"});
-                    $("#pie").css({"font-size": "48px"});
-                    $("#sound-on").css({"font-size": "48px"});
-                    $("#sound-off").css({"font-size": "48px"});
+                    $("#bar").css({"font-size": "20px"});
+                    $("#line").css({"font-size": "20px"});
+                    $("#pie").css({"font-size": "20px"});
+                    $("#sound-on").css({"font-size": "20px"});
+                    $("#sound-off").css({"font-size": "20px"});
                     $("#lineChart").hide();
                     $("#barChart").hide();
                     $("#pieChart").hide();
@@ -90,21 +85,21 @@
                 });
 
                 $("#sound-on").click(function() {
-                    $("#bar").css({"font-size": "48px"});
-                    $("#line").css({"font-size": "48px"});
-                    $("#pie").css({"font-size": "48px"});
-                    $("#sound-on").css({"font-size": "60px"});
-                    $("#sound-off").css({"font-size": "48px"});
+                    $("#bar").css({"font-size": "20px"});
+                    $("#line").css({"font-size": "20px"});
+                    $("#pie").css({"font-size": "20px"});
+                    $("#sound-on").css({"font-size": "30px"});
+                    $("#sound-off").css({"font-size": "20px"});
                     //playMusic();
                 });
 
                 $("#sound-off").click(function() {
-                    $("#bar").css({"font-size": "48px"});
-                    $("#line").css({"font-size": "48px"});
-                    $("#pie").css({"font-size": "48px"});
-                    $("#sound-on").css({"font-size": "48px"});
-                    $("#sound-off").css({"font-size": "60px"});
-                    stopMusic();
+                    $("#bar").css({"font-size": "20px"});
+                    $("#line").css({"font-size": "20px"});
+                    $("#pie").css({"font-size": "20px"});
+                    $("#sound-on").css({"font-size": "20px"});
+                    $("#sound-off").css({"font-size": "30px"});
+                    stopBeep();
                 });
             });
 
@@ -120,7 +115,8 @@
                         backgroundColor: '#AF7', // lime green
                         borderWidth: 5,
                         data: []
-                    },                        {
+                    },                        
+                    {
                         label: '7.25Hz',
                         backgroundColor: '#AF7',
                         borderWidth: 5,
@@ -465,34 +461,49 @@
             // specific instruments stack up and play
             // for example, guitar -> bass -> saxophone -> etc.
             // if your meditation works really good, some 'bonus' sound will be added
-            
+            // Tone.solo might be a good tool. Tone.player is also good.
+
+            var player = new Tone.Player({
+                // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
+                "url": "https://raw.githubusercontent.com/Tonejs/Tone.js/master/examples/audio/FWDL.mp3",
+                "playbackRate": 1.0,
+                "loop": true,
+                "loopStart": 0,
+                "loopEnd": 0
+            });
 
             $("#sound-on").click(function() {
                 player.toDestination().start();
-                socket.on('fft_data', function(fft_data) {
+            });
+
+            // GET DATA FROM THE SERVER
+            //$("#sound-on").click(function() {
+                //player.toDestination().start();
+                //socket.on('fft_data', function(fft_data) {
                     //updateBarChart(barChart, fft_data);
                     //updateLineChart2(lineChart, fft_data);
                     //updatePieChart(pieChart, fft_data);
                     //playBeep();
-
-                });
-            });
+                    
+                //});
+            //});
 
             // FUNCTIONS FOR SOUND
             function playBeep() {
                 // changing volume
+                var optimalVolumeUpDownVal = 0.63;
                 output.innerHTML = slider.value;
                 slider.oninput = function() {
                     output.innerHTML = this.value;
                     if (this.value > current) {
-                        player.volume.value += 0.63;
+                        player.volume.value += optimalVolumeUpDownVal;
                         if (player.volume.value > maxVolume) {
                             player.volume.value = maxVolume;
                         }
                         before = current;
                         current = this.value;
                     } else if (this.value < current) {
-                        player.volume.value -= 0.63;
+                        player.volume.value -= optimalVolumeUpDownVal;
                         if (player.volume.value < minVolume) {
                             player.volume.value = minVolume;
                         }
@@ -502,7 +513,7 @@
                 };                    
             }
 
-            function stopMusic() {
+            function stopBeep() {
                 console.log("stop");
                 player.mute = true;
             }
@@ -564,8 +575,7 @@
                     }
                     tracker++;
                 }
-                pieChart.update();
-                
+                pieChart.update();            
             }
         </script>
     </body>   

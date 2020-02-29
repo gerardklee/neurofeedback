@@ -1,5 +1,12 @@
-.sliceContainer {
-    width: 50%;
+.page {
+    background: url('bg.jpg');
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+}
+
+.slideContainer {
+    width: 70%;
 }
 .p {
     opacity: 0.7;
