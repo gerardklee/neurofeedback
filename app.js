@@ -22,6 +22,7 @@ var server = app.listen(PORT, () => {
 });
 const io = socket(server);
 
+app.use(express.static('./music'));
 app.use(express.static(__dirname));
 sendMockData();
 
