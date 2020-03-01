@@ -1,8 +1,12 @@
-.page {
-    background: url('bg.jpg');
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
+body {
+    background-image: url("bg.jpg");
     background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+html {
+    height: 100%;
 }
 
 .slider {
