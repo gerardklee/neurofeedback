@@ -464,36 +464,72 @@
             // if your meditation works really good, some 'bonus' sound will be added
             // Tone.solo might be a good tool. Tone.player is also good.
 
+            var loopStart = 0;
+            var loopEnd = 0;
             var cello = new Tone.Player({
-                // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
                 "url": "http://localhost:3000/music/cellos.mp3",
                 "playbackRate": 1.0,
                 "mute": false,
                 "loop": true,
-                "loopStart": 0,
-                "loopEnd": 0
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
             });
 
             var percussion = new Tone.Player({
-                // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
                 "url": "http://localhost:3000/music/percussion.mp3",
                 "playbackRate": 1.0,
                 "mute": false,
                 "loop": true,
-                "loopStart": 0,
-                "loopEnd": 0
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
             });
 
             var ensemble = new Tone.Player({
-                // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
                 "url": "http://localhost:3000/music/ensemble.mp3",
                 "playbackRate": 1.0,
                 "mute": false,
                 "loop": true,
-                "loopStart": 0,
-                "loopEnd": 0
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
             });
 
+            var choir = new Tone.Player({
+                "url": "http://localhost:3000/music/choir.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
+            });
+
+            var viola = new Tone.Player({
+                "url": "http://localhost:3000/music/viola.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
+            });
+
+            var sitar = new Tone.Player({
+                "url": "http://localhost:3000/music/sitar.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
+            });
+
+            var violin = new Tone.Player({
+                "url": "http://localhost:3000/music/violin.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
+            });
+
+            //var multiplayer = [cello, percussion, ensemble, choir, viola, sitar, violin];
             var multiplayer = [cello, percussion, ensemble];
 
             $("#sound-on").click(function() {
@@ -517,6 +553,14 @@
             **/
 
             // FUNCTIONS FOR SOUND
+
+            function stopMusic() {
+                console.log("stop music");
+                for (var instrument = 0; instrument < multiplayer.length; instrument++) {
+                    multiplayer[instrument].mute = true;
+                }
+            }
+
             function playBeep() {
                 // changing volume
                 var optimalVolumeUpDownVal = 0.63;
@@ -539,12 +583,6 @@
                         current = this.value;
                     }
                 };                    
-            }
-            function stopMusic() {
-                console.log("stop music");
-                for (var instrument = 0; instrument < multiplayer.length; instrument++) {
-                    multiplayer[i].mute = true;
-                }
             }
 
             function stopBeep() {
