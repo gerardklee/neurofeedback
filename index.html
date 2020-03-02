@@ -23,9 +23,9 @@
         </div>
         <br>
         <div>
-            <canvas id="barChart" style="display: none"></canvas>
-            <canvas id="lineChart" style="display: none"></canvas>
-            <canvas id="pieChart" style="display: none"></canvas>
+            <canvas id="barChart" height=50 style="display: none"></canvas>
+            <canvas id="lineChart" height=50 style="display: none"></canvas>
+            <canvas id="pieChart" height=50 style="display: none"></canvas>
             <canvas id="sound"></canvas>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
@@ -99,13 +99,14 @@
                     $("#pie").css({"font-size": "20px"});
                     $("#sound-on").css({"font-size": "20px"});
                     $("#sound-off").css({"font-size": "30px"});
-                    stopBeep();
+                    stopMusic();
                 });
             });
 
             var socket = io('http://localhost:3000');
             var ctx = document.getElementById('barChart').getContext('2d');
-
+            ctx.borderWidth = 300;
+            ctx.borderHeight = 300;
             // BAR CHART USING CHART
             var barChartData = {
                 labels: [],
@@ -463,30 +464,57 @@
             // if your meditation works really good, some 'bonus' sound will be added
             // Tone.solo might be a good tool. Tone.player is also good.
 
-            var player = new Tone.Player({
+            var cello = new Tone.Player({
                 // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
-                "url": "https://raw.githubusercontent.com/Tonejs/Tone.js/master/examples/audio/FWDL.mp3",
+                "url": "http://localhost:3000/music/cellos.mp3",
                 "playbackRate": 1.0,
+                "mute": false,
                 "loop": true,
                 "loopStart": 0,
                 "loopEnd": 0
             });
 
-            $("#sound-on").click(function() {
-                player.toDestination().start();
+            var percussion = new Tone.Player({
+                // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
+                "url": "http://localhost:3000/music/percussion.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": 0,
+                "loopEnd": 0
             });
 
+            var ensemble = new Tone.Player({
+                // http://www.largesound.com/ashborytour/sound/brobob.mp3 doesn't work. why?
+                "url": "http://localhost:3000/music/ensemble.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": 0,
+                "loopEnd": 0
+            });
+
+            var multiplayer = [cello, percussion, ensemble];
+
+            $("#sound-on").click(function() {
+                for (var instrument = 0; instrument < multiplayer.length; instrument++) {
+                    multiplayer[instrument].toDestination().start();
+                }
+            });
+
+            /**
             // GET DATA FROM THE SERVER
-            //$("#sound-on").click(function() {
-                //player.toDestination().start();
-                //socket.on('fft_data', function(fft_data) {
-                    //updateBarChart(barChart, fft_data);
-                    //updateLineChart2(lineChart, fft_data);
-                    //updatePieChart(pieChart, fft_data);
+            $("#sound-on").click(function() {
+                player.toDestination().start();
+                socket.on('fft_data', function(fft_data) {
+                    updateBarChart(barChart, fft_data);
+                    updateLineChart2(lineChart, fft_data);
+                    updatePieChart(pieChart, fft_data);
                     //playBeep();
                     
-                //});
-            //});
+                });
+            });
+            **/
 
             // FUNCTIONS FOR SOUND
             function playBeep() {
@@ -512,9 +540,15 @@
                     }
                 };                    
             }
+            function stopMusic() {
+                console.log("stop music");
+                for (var instrument = 0; instrument < multiplayer.length; instrument++) {
+                    multiplayer[i].mute = true;
+                }
+            }
 
             function stopBeep() {
-                console.log("stop");
+                console.log("stop beep");
                 player.mute = true;
             }
 
