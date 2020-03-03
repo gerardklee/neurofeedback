@@ -24,10 +24,10 @@ const io = socket(server);
 
 app.use(express.static('./music'));
 app.use(express.static(__dirname));
-sendMockData();
+sendEEGData();
 
 // server functions
-async function initExpress() {
+async function sendEEGData() {
     const wifi = new Wifi();
     await wifi.connect({ ipAddress: '192.168.4.1' });
     await wifi.start();
@@ -37,16 +37,16 @@ async function initExpress() {
     // Frequency Resolution = Sampling Rate / FFT Size
     // In this case, FFT Size = 1024, Sampling Rate = 256
     // FR = 0.25
+    // duration must be equal to number of bins
     
     wifi.stream.pipe(
         voltsToMicrovolts(),
-        epoch({ duration: 256, interval: 100, samplingRate: 256 }),
+        epoch({ duration: 1024, interval: 100, samplingRate: 256 }),
         fft({ bins: 1024 }),
-        sliceFFT([7, 13.75])
+        sliceFFT([7.5, 12.5])
     ).subscribe(data => 
         {
-            console.log("streaming starts..")
-            io.emit("data", data);
+            io.emit("fft_data", data);
         }
     );
 }
