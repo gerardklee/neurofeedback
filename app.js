@@ -25,6 +25,7 @@ const io = socket(server);
 app.use(express.static('./music'));
 app.use(express.static(__dirname));
 sendEEGData();
+//sendAlphaWave();
 
 // server functions
 async function sendEEGData() {
@@ -38,15 +39,18 @@ async function sendEEGData() {
     // In this case, FFT Size = 1024, Sampling Rate = 256
     // FR = 0.25
     // duration must be equal to number of bins
-    
+    // 1024 for 0.25 frequency resolution
+    // 1280 for 0.2 frequency resolution
+
     wifi.stream.pipe(
         voltsToMicrovolts(),
-        epoch({ duration: 1024, interval: 100, samplingRate: 256 }),
+        epoch({ duration: 1024, interval: 50, samplingRate: 256 }),
         fft({ bins: 1024 }),
-        sliceFFT([7.5, 12.5])
+        sliceFFT([3, 8])
     ).subscribe(data => 
         {
             io.emit("fft_data", data);
+            console.log(data.psd[0][3]);
         }
     );
 }
@@ -56,7 +60,7 @@ async function sendMockData() {
     setInterval(() => io.emit('fft_data', data1), 100);
 }
 
-async function init () {
+async function sendAlphaWave() {
     const wifi = new Wifi();
     await wifi.connect({ ipAddress: '192.168.4.1' });
     await wifi.start();
@@ -70,11 +74,11 @@ async function init () {
     wifi.stream.pipe(
         voltsToMicrovolts(),
         epoch({ duration: 256, interval: 100, samplingRate: 256 }),
-        fft({ bins: 1024 }),
-        sliceFFT([7, 13.75])
+        fft({ bins: 256 }),
+        powerByBand()
     ).subscribe(data => 
         {
-            io2.emit("data", data);
+            console.log(data["alpha"]);
         }
     );
 }
