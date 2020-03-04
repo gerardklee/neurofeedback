@@ -254,7 +254,17 @@
 
                     legend: {
                         display: false
-                    }
+                    }, 
+
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                min: 0,
+                                max: 2,
+                                stepsize: 0.1
+                            }
+                        }]
+                    }       
                 }
             });
 
@@ -340,6 +350,16 @@
 
                     legend: {
                         display: false
+                    },
+
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                min: 0,
+                                max: 5,
+                                stepsize: 0.5
+                            }
+                        }]
                     }
                 }
             });
@@ -486,8 +506,7 @@
             // GET DATA FROM THE SERVER
             $("#sound-on").click(function() {
                 socket.on('fft_data', function(fft_data) {
-                    console.log(fft_data.psd[0]);
-                    console.log(fft_data.psd[0][0]);
+                    //console.log(fft_data.psd[0]);
                     //console.log(fft_data.freqs);
                     updateBarChart(barChart, fft_data);
                     updateLineChart2(lineChart, fft_data);
@@ -568,11 +587,11 @@
                 var randomVal = Math.random() * 10;
 
                 //console.log(lineChart.data.datasets[0].data);
-                if (lineChart.data.datasets[0].data.length == length) {
+                if (lineChart.data.datasets[0].data.length > length) {
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.labels.shift();
                 }
-                lineChart.data.datasets[0].data.push(fft_data.psd[0][0]);
+                lineChart.data.datasets[0].data.push(averageAlpha);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
@@ -580,11 +599,10 @@
             function getAlphaAverage(fft_data) {
                 var total = 0;
                 var average = 0;
-                var totalNumberofFrequencies = 25;
                 for (var i = 0; i < fft_data.psd[0].length; i++) {
                     total += fft_data.psd[0][i];
                 }
-                average = total / totalNumberofFrequencies;
+                average = total / fft_data.psd[0].length;
                 return average;
             }
 
