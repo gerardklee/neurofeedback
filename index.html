@@ -400,8 +400,8 @@
 
             // FEEDBACK USING TONE.JS
 
-            // player below uses beep
-            // intended to control the frequency of the beep based on alpha waves
+            // player below uses beep.
+            // intended to control the frequency of the beep based on alpha waves.
             var player = new Tone.Oscillator({
                 type: "sine",
                 frequency: 500,
@@ -423,10 +423,9 @@
 
             // multiplayer below stacks instruments
             // once you go above certain values of alpha frequency,
-            // specific instruments stack up and play
+            // specific instruments stack up and play.
             // for example, guitar -> bass -> saxophone -> etc.
-            // if your meditation works really good, some 'bonus' sound will be added
-
+            // if your meditation works really good, some 'bonus' sound will be added.
             var loopStart = 0;
             var loopEnd = 0;
             var cello = new Tone.Player({
@@ -502,20 +501,49 @@
             });
             **/
 
+            // using only the theme, use playbackRate as the feedback.
+            var theme = new Tone.Player({
+                "url": "http://localhost:3000/music/theme.mp3",
+                "playbackRate": 1.0,
+                "mute": false,
+                "loop": true,
+                "loopStart": loopStart,
+                "loopEnd": loopEnd
+            });
             
+            const startTime = Date.now();
+            var timeElapsed = 0;
+            var maxFrequency = 0;
+            var timeForStabilizing = 1000; // 60000 for 1 minute
+            var timeForMaxFreq = 2000; // 200000 for 3 minutes
             // GET DATA FROM THE SERVER
+            // alpha range is gray channel and eye blink is purple channel.
             $("#sound-on").click(function() {
                 socket.on('fft_data', function(fft_data) {
-                    //console.log(fft_data.psd[0]);
-                    //console.log(fft_data.freqs);
-                    updateBarChart(barChart, fft_data);
-                    updateLineChart2(lineChart, fft_data);
-                    updatePieChart(pieChart, fft_data);
-                    //playBeep();                   
+                    timeElapsed = Date.now() - startTime;
+                    // run the device for about a minute to stabilize the data.
+                    if (timeElapsed > 0 && timeElapsed < timeForStabilizing) {
+                        console.log("loading...");
+                    
+                    // once stabilized, have the user close his/her eyes and 
+                    // run the device for about 3 minutes to extract the alpha
+                    // peak frequency.
+                    } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
+                        console.log("extracting max alpha frequency...")
+                        maxFrequency = Math.max(fft_data.psd[0]);
+                    
+                    // once alpha peak frequency is obtained, insert sound
+                    // accordingly.
+                    } else {
+                        updateLineChart2(lineChart, fft_data);
+                    }
                 });
             });
 
             // FUNCTIONS FOR SOUND
+            function getMaxFrequency(fft_data) {
+
+            }
             function playMusic() {
                 for (var instrument = 0; instrument < multiplayer.length; instrument++) {
                     multiplayer[instrument].toDestination().start();
@@ -591,7 +619,7 @@
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.labels.shift();
                 }
-                lineChart.data.datasets[0].data.push(averageAlpha);
+                lineChart.data.datasets[0].data.push(randomVal);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
@@ -603,6 +631,16 @@
                     total += fft_data.psd[0][i];
                 }
                 average = total / fft_data.psd[0].length;
+                return average;
+            }
+
+            function getBlinksAverage(fft_data) {
+                var total = 0;
+                var average = 0;
+                for (var i = 0; i < fft_data.psd[1].length; i++) {
+                    total += fft_data.psd[1][i];
+                }
+                average = total / fft_data.psd[1].length;
                 return average;
             }
 
@@ -618,6 +656,9 @@
                 }
                 pieChart.update();            
             }
+
+            // ACCESSORY FUNCTIONS
+
         </script>
     </body>   
 </html>
