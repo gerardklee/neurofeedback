@@ -514,9 +514,10 @@
             const startTime = Date.now();
             var timeElapsed = 0;
             var timeForStabilizing = 1000; // 60000 for 1 minute
-            var timeForMaxFreq = 2000; // 200000 for 3 minutes
+            var timeForMaxFreq = 10000; // 200000 for 3 minutes
             var prevMaxFreqVal = 0;
             var maxFreqIndex = 0;
+            var maxVal = 0;
             var themeFlag = false;
 
             // GET DATA FROM THE SERVER
@@ -524,16 +525,18 @@
             $("#sound-on").click(function() {
                 socket.on('fft_data', function(fft_data) {
                     timeElapsed = Date.now() - startTime;
+
                     // run the device for about a minute to stabilize the data.
                     if (timeElapsed > 0 && timeElapsed < timeForStabilizing) {
                         console.log("loading...");
                     
                     // once stabilized, have the user close his/her eyes and 
                     // run the device for about 3 minutes to extract the alpha
-                    // peak frequency.
+                    // peak frequency index.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
                         console.log("extracting max alpha frequency...")
-                        maxFreqIndex = getMaxIndex(fft_data);
+                        getMaxIndex(fft_data);
+                        console.log("maxFreqIndex: ", maxFreqIndex);
 
                     // once alpha peak frequency is obtained, insert sound
                     // accordingly as well as plotting.
@@ -568,16 +571,17 @@
             }
 
             function getMaxIndex(fft_data) {
-                var maxVal = fft_data.psd[0][0];
-                var maxIndex = 0;
+                if (maxVal == 0) {
+                    maxVal = fft_data.psd[0][0];
+                }
 
                 for (var i = 0; i < fft_data.psd[0].length; i++) {
                     if (fft_data.psd[0][i] > maxVal) {
-                        maxIndex = i;
-                        max = fft_data.psd[0][i];
+                        console.log("here: ", fft_data.psd[0][i]);
+                        maxFreqIndex = i;
+                        maxVal = fft_data.psd[0][i];
                     }
                 }
-                return maxIndex;
             }
 
             function playTheme() {
