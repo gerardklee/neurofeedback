@@ -513,9 +513,12 @@
             
             const startTime = Date.now();
             var timeElapsed = 0;
-            var maxFrequency = 0;
             var timeForStabilizing = 1000; // 60000 for 1 minute
             var timeForMaxFreq = 2000; // 200000 for 3 minutes
+            var prevMaxFreqVal = 0;
+            var maxFreqIndex = 0;
+            var themeFlag = false;
+
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
             $("#sound-on").click(function() {
@@ -530,27 +533,68 @@
                     // peak frequency.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
                         console.log("extracting max alpha frequency...")
-                        maxFrequency = Math.max(fft_data.psd[0]);
-                    
+                        maxFreqIndex = getMaxIndex(fft_data);
+
                     // once alpha peak frequency is obtained, insert sound
-                    // accordingly.
+                    // accordingly as well as plotting.
                     } else {
-                        updateLineChart2(lineChart, fft_data);
+                        // initialize the maxFreqVal to start feedback
+                        if (prevMaxFreqVal == 0) {
+                            prevMaxFreqVal = fft_data.psd[0][maxFreqIndex]
+                        }
+                        // after everything's set, play the theme.
+                        if (themeFlag == false) {
+                            playTheme();
+                            themeFlag = true;
+                        } else {
+                            updateLineChart2(lineChart, fft_data);
+                            provideFeedback(fft_data.psd[0][maxFreqIndex]);
+                        }
                     }
                 });
             });
 
             // FUNCTIONS FOR SOUND
-            function getMaxFrequency(fft_data) {
-
+            function provideFeedback(curMaxFreqVal) {
+                console.log("provide feedback");
+                console.log(curMaxFreqVal);
+                if (curMaxFreqVal > prevMaxFreqVal) {
+                    theme.playbackRate += 0.01;
+                    prevMaxFreqVal = curMaxFreqVal;
+                } else {
+                    theme.playbackRate -= 0.01;
+                    pervMaxFreqVal = curMaxFreqVal;
+                }
             }
-            function playMusic() {
+
+            function getMaxIndex(fft_data) {
+                var maxVal = fft_data.psd[0][0];
+                var maxIndex = 0;
+
+                for (var i = 0; i < fft_data.psd[0].length; i++) {
+                    if (fft_data.psd[0][i] > maxVal) {
+                        maxIndex = i;
+                        max = fft_data.psd[0][i];
+                    }
+                }
+                return maxIndex;
+            }
+
+            function playTheme() {
+                theme.toDestination().start();
+            }
+
+            function stopTheme()  {
+                theme.mute = true;
+            }
+
+            function playMultiPlayer() {
                 for (var instrument = 0; instrument < multiplayer.length; instrument++) {
                     multiplayer[instrument].toDestination().start();
                 }
             }
 
-            function stopMusic() {
+            function stopMultiPlayer() {
                 console.log("stop music");
                 for (var instrument = 0; instrument < multiplayer.length; instrument++) {
                     multiplayer[instrument].mute = true;
