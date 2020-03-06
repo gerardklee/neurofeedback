@@ -15,6 +15,9 @@
             <button type="button" class="fa fa-bar-chart" style="font-size:20px" id="bar"></button>
             <button type="button" class="fa fa-line-chart" style="font-size:20px" id="line"></button>
             <button type="button" class="fa fa-pie-chart" style="font-size:20px" id="pie"></button>
+            <i class="fa fa-spinner fa-spin" style="font-size:40px" id="loading-icon"></i>
+            <i class="fa fa-cog fa-spin" style="font-size:40px" id="extracting-icon"></i>
+            <i class="fa fa-check" style="font-size:40px" id="ready-icon"></i>
         </div>
         <div class="slideContainer">
             <br>
@@ -38,6 +41,9 @@
         <script>
             console.log("server connected");
             $(document).ready(function() {
+                $("#loading-icon").hide();
+                $("#extracting-icon").hide();
+                $("#ready-icon").hide();
                 $("#bar").click(function() {
                     $("#bar").css({"font-size": "30px"});
                     $("#line").css({"font-size": "20px"});
@@ -513,12 +519,15 @@
             
             const startTime = Date.now();
             var timeElapsed = 0;
-            var timeForStabilizing = 1000; // 60000 for 1 minute
+            var timeForStabilizing = 6000; // 60000 for 1 minute
             var timeForMaxFreq = 10000; // 200000 for 3 minutes
             var prevMaxFreqVal = 0;
             var maxFreqIndex = 0;
             var maxVal = 0;
             var themeFlag = false;
+            var loading = false;
+            var extracting = false;
+            var ready = false;
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
@@ -528,19 +537,37 @@
 
                     // run the device for about a minute to stabilize the data.
                     if (timeElapsed > 0 && timeElapsed < timeForStabilizing) {
-                        console.log("loading...");
-                    
+                        if (loading == false) {
+                            loading = true;
+                            $("#loading-icon").show();
+                        }
+
                     // once stabilized, have the user close his/her eyes and 
                     // run the device for about 3 minutes to extract the alpha
                     // peak frequency index.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
-                        console.log("extracting max alpha frequency...")
+                        if (loading == true) {
+                            loading = false;
+                            $("#loading-icon").hide();
+                        }
+                        if (extracting == false) {
+                            extracting = true;
+                            $("#extracting-icon").show();
+                        }
                         getMaxIndex(fft_data);
-                        console.log("maxFreqIndex: ", maxFreqIndex);
 
+                        
                     // once alpha peak frequency is obtained, insert sound
                     // accordingly as well as plotting.
                     } else {
+                        if (extracting == true) {
+                            extracting = false;
+                            $("#extracting-icon").hide();
+                        }
+                        if (ready == false) {
+                            ready = true;
+                            $("#ready-icon").show();
+                        }
                         // initialize the maxFreqVal to start feedback
                         if (prevMaxFreqVal == 0) {
                             prevMaxFreqVal = fft_data.psd[0][maxFreqIndex]
@@ -551,25 +578,30 @@
                             themeFlag = true;
                         } else {
                             updateLineChart2(lineChart, fft_data);
-                            provideFeedback(fft_data.psd[0][maxFreqIndex]);
+                            provideRegularFeedback(fft_data.psd[0][maxFreqIndex]);
                         }
                     }
                 });
             });
 
             // FUNCTIONS FOR SOUND
-            function provideFeedback(curMaxFreqVal) {
+            function provideRegularFeedback(curMaxFreqVal) {
                 console.log("provide feedback");
                 console.log(curMaxFreqVal);
                 if (curMaxFreqVal > prevMaxFreqVal) {
                     theme.playbackRate += 0.01;
                     prevMaxFreqVal = curMaxFreqVal;
+                } else if (curMaxFreqVal == prevMaxFreqVal) {
+                    return;
                 } else {
                     theme.playbackRate -= 0.01;
                     pervMaxFreqVal = curMaxFreqVal;
                 }
             }
 
+            function providedStackFeedback(curMaxFreqVal) {
+                return;
+            }
             function getMaxIndex(fft_data) {
                 if (maxVal == 0) {
                     maxVal = fft_data.psd[0][0];
