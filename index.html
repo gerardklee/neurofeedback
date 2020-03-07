@@ -528,6 +528,8 @@
             var loading = false;
             var extracting = false;
             var ready = false;
+            var prevEMAVal = 0;
+            var multiplier = 0;
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
@@ -554,7 +556,7 @@
                             extracting = true;
                             $("#extracting-icon").show();
                         }
-                        getMaxIndex(fft_data);
+                        //getMaxIndex(fft_data);
 
                         
                     // once alpha peak frequency is obtained, insert sound
@@ -578,6 +580,7 @@
                             themeFlag = true;
                         } else {
                             updateLineChart2(lineChart, fft_data);
+                            updateBarChart(barChart, fft_data);
                             provideRegularFeedback(fft_data.psd[0][maxFreqIndex]);
                         }
                     }
@@ -586,15 +589,13 @@
 
             // FUNCTIONS FOR SOUND
             function provideRegularFeedback(curMaxFreqVal) {
-                console.log("provide feedback");
-                console.log(curMaxFreqVal);
                 if (curMaxFreqVal > prevMaxFreqVal) {
-                    theme.playbackRate += 0.01;
+                    //theme.playbackRate += 0.01;
                     prevMaxFreqVal = curMaxFreqVal;
                 } else if (curMaxFreqVal == prevMaxFreqVal) {
                     return;
                 } else {
-                    theme.playbackRate -= 0.01;
+                    //theme.playbackRate -= 0.01;
                     pervMaxFreqVal = curMaxFreqVal;
                 }
             }
@@ -689,17 +690,29 @@
             }
 
             // FUNCTIONS FOR LINE CHART (CHART.JS)
-            function updateLineChart2(lineChart, fft_data) {
-                var averageAlpha = getAlphaAverage(fft_data);
+            function updateLineChartRaw(lineChart, fft_data) {
                 var length = 100;
-                var randomVal = Math.random() * 10;
-
-                //console.log(lineChart.data.datasets[0].data);
                 if (lineChart.data.datasets[0].data.length > length) {
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.labels.shift();
                 }
-                lineChart.data.datasets[0].data.push(randomVal);
+                lineChart.data.datasets[0].data.push(fft_data.data[0]);
+                lineChart.data.labels.push(counter++);
+                lineChart.update();
+            }
+
+            function updateLineChart2(lineChart, fft_data) {
+                var averageAlpha = getAlphaAverage(fft_data);
+                var tempVal = fft_data.psd[0][0];
+                var length = 100;
+                var randomVal = Math.random() * 10;
+                console.log("3Hz: ", tempVal);
+
+                if (lineChart.data.datasets[0].data.length > length) {
+                    lineChart.data.datasets[0].data.shift();
+                    lineChart.data.labels.shift();
+                }
+                lineChart.data.datasets[0].data.push(averageAlpha);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
@@ -738,7 +751,18 @@
             }
 
             // ACCESSORY FUNCTIONS
+            function getAverage(arr, period) {
+                var total = arr.reduce((a, b) => a + b, 0);
+                return total / period;
+            }
 
+            function getMultiplier(period) {
+                return 2 / (period + 1);
+            }
+
+            function getEMA(curVal, prevEMAVal, multiplier) {
+                return (curVal - prevEMAVAL) * multiplier + prevEMAVal;
+            }
         </script>
     </body>   
 </html>
