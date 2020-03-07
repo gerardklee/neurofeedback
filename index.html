@@ -528,8 +528,13 @@
             var loading = false;
             var extracting = false;
             var ready = false;
+
+            // calculating EMA
+            var EMAarr = [];
+            var SMAarr = [];
+            const period = 100;
             var prevEMAVal = 0;
-            var multiplier = 0;
+            var smoothingConstant = 0;
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
@@ -556,53 +561,57 @@
                             extracting = true;
                             $("#extracting-icon").show();
                         }
-                        //getMaxIndex(fft_data);
-
+                        getMaxIndex(fft_data);
                         
-                    // once alpha peak frequency is obtained, insert sound
-                    // accordingly as well as plotting.
+                    // once alpha peak frequency is obtained, use that value to calculate EMA
+                    // and provide sound feedback based on the EMA values.
                     } else {
-                        if (extracting == true) {
-                            extracting = false;
-                            $("#extracting-icon").hide();
+                        if (SMAarr.length < period) {
+                            SMAarr.push(fft_data.psd[0][maxFreqIndex]);
+                        } 
+                        // insert the first EMA value to the EMAarr.
+                        if (SMAarr.length == period - 1 && EMAarr.length == 0) {
+                            SMAarr.push(fft_data[0].psd[0][maxFreqIndex]);
+                            var firstEMAVal = getFirstEMAVal(SMAarr, period);
+                            EMAarr.push(firstEMAVal);
+                            smoothingConstant = getSmoothingConstant(period);
                         }
-                        if (ready == false) {
-                            ready = true;
-                            $("#ready-icon").show();
-                        }
-                        // initialize the maxFreqVal to start feedback
-                        if (prevMaxFreqVal == 0) {
-                            prevMaxFreqVal = fft_data.psd[0][maxFreqIndex]
-                        }
-                        // after everything's set, play the theme.
-                        if (themeFlag == false) {
-                            playTheme();
-                            themeFlag = true;
-                        } else {
-                            updateLineChart2(lineChart, fft_data);
-                            updateBarChart(barChart, fft_data);
-                            provideRegularFeedback(fft_data.psd[0][maxFreqIndex]);
+
+                        if (EMAarr.length > 0) {
+                            if (extracting == true) {
+                                extracting = false;
+                                $("#extracting-icon").hide();
+                            }
+                            if (ready == false) {
+                                ready = true;
+                                $("#ready-icon").show();
+                            }
+                            // if first EMAVal is set and themeFlag is true, then start providing
+                            // feedback!
+                            if (themeFlag == false) {
+                                playTheme();
+                                themeFlag = true;
+                            } else {
+                                prevEMAVal = EMAarr[EMAarr.length - 1];
+                                var feedbackInput = getEMA(fft_data.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
+                                EMAarr.push(feedbackInput);
+                                provideRegularFeedback(feedbackInput);
+                            }
                         }
                     }
                 });
             });
 
             // FUNCTIONS FOR SOUND
-            function provideRegularFeedback(curMaxFreqVal) {
-                if (curMaxFreqVal > prevMaxFreqVal) {
-                    //theme.playbackRate += 0.01;
-                    prevMaxFreqVal = curMaxFreqVal;
-                } else if (curMaxFreqVal == prevMaxFreqVal) {
-                    return;
-                } else {
-                    //theme.playbackRate -= 0.01;
-                    pervMaxFreqVal = curMaxFreqVal;
-                }
+            function provideRegularFeedback(feedbackInput) {
+                // adjust playbackRate accordingly
+                return feedbackInput;
             }
 
             function providedStackFeedback(curMaxFreqVal) {
                 return;
             }
+
             function getMaxIndex(fft_data) {
                 if (maxVal == 0) {
                     maxVal = fft_data.psd[0][0];
@@ -751,16 +760,17 @@
             }
 
             // ACCESSORY FUNCTIONS
-            function getAverage(arr, period) {
+            // first SMA(first average) becomes the first EMA.
+            function getFirstEMAVal(arr, period) {
                 var total = arr.reduce((a, b) => a + b, 0);
                 return total / period;
             }
 
-            function getMultiplier(period) {
+            function getSmoothingConstant(period) {
                 return 2 / (period + 1);
             }
 
-            function getEMA(curVal, prevEMAVal, multiplier) {
+            function getEMA(curVal, prevEMAVal, smoothingConstant) {
                 return (curVal - prevEMAVAL) * multiplier + prevEMAVal;
             }
         </script>
