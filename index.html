@@ -13,8 +13,9 @@
             <button type="button" class="fa fa-volume-up" style="font-size:20px" id="sound-on"></button>
             <button type="button" class="fa fa-volume-off" style="font-size:20px" id="sound-off"></button>
             <button type="button" class="fa fa-bar-chart" style="font-size:20px" id="bar"></button>
-            <button type="button" class="fa fa-line-chart" style="font-size:20px" id="line"></button>
+            <button type="button" class="fa fa-area-chart" style="font-size:20px" id="line"></button>
             <button type="button" class="fa fa-pie-chart" style="font-size:20px" id="pie"></button>
+            <button type="button" class="fa fa-line-chart" style="font-size:20px" id="raw"></button>
             <i class="fa fa-spinner fa-spin" style="font-size:40px" id="loading-icon"></i>
             <i class="fa fa-cog fa-spin" style="font-size:40px" id="extracting-icon"></i>
             <i class="fa fa-check" style="font-size:40px" id="ready-icon"></i>
@@ -29,6 +30,7 @@
             <canvas id="barChart" height=50 style="display: none"></canvas>
             <canvas id="lineChart" height=50 style="display: none"></canvas>
             <canvas id="pieChart" height=50 style="display: none"></canvas>
+            <canvas id="rawChart" height=50 style="display: none"></canvas>
             <canvas id="sound"></canvas>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
@@ -50,9 +52,11 @@
                     $("#pie").css({"font-size": "20px"});
                     $("#sound-on").css({"font-size": "20px"});
                     $("#sound-off").css({"font-size": "20px"});
+                    $("#raw").css({"font-size": "20px"});
                     $("#barChart").show();
                     $("#lineChart").hide();
                     $("#pieChart").hide();
+                    $("#rawChart").hide();
 
                 });
 
@@ -62,9 +66,11 @@
                     $("#pie").css({"font-size": "20px"});
                     $("#sound-on").css({"font-size": "20px"});
                     $("#sound-off").css({"font-size": "20px"});
+                    $("#raw").css({"font-size": "20px"});
                     $("#lineChart").show();
                     $("#barChart").hide();
                     $("#pieChart").hide();
+                    $("#rawChart").hide();
                 });
 
                 $("#pie").click(function() {
@@ -73,9 +79,24 @@
                     $("#pie").css({"font-size": "30px"});
                     $("#sound-on").css({"font-size": "20px"});
                     $("#sound-off").css({"font-size": "20px"});
+                    $("#raw").css({"font-size": "20px"});
                     $("#lineChart").hide();
                     $("#barChart").hide();
                     $("#pieChart").show();
+                    $("#rawChart").hide();
+                });
+
+                $("#raw").click(function() {
+                    $("#bar").css({"font-size": "20px"});
+                    $("#line").css({"font-size": "20px"});
+                    $("#pie").css({"font-size": "20px"});
+                    $("#sound-on").css({"font-size": "20px"});
+                    $("#sound-off").css({"font-size": "20px"});
+                    $("#raw").css({"font-size": "30px"});
+                    $("#lineChart").hide();
+                    $("#barChart").hide();
+                    $("#pieChart").hide();
+                    $("#rawChart").show();
                 });
 
                 $("#brain").click(function() {
@@ -84,9 +105,11 @@
                     $("#pie").css({"font-size": "20px"});
                     $("#sound-on").css({"font-size": "20px"});
                     $("#sound-off").css({"font-size": "20px"});
+                    $("#raw").css({"font-size": "20px"});
                     $("#lineChart").hide();
                     $("#barChart").hide();
                     $("#pieChart").hide();
+                    $("#rawChart").hide();
                     
                 });
 
@@ -96,6 +119,7 @@
                     $("#pie").css({"font-size": "20px"});
                     $("#sound-on").css({"font-size": "30px"});
                     $("#sound-off").css({"font-size": "20px"});
+                    $("#raw").css({"font-size": "20px"});
                     //playMusic();
                 });
 
@@ -105,6 +129,7 @@
                     $("#pie").css({"font-size": "20px"});
                     $("#sound-on").css({"font-size": "20px"});
                     $("#sound-off").css({"font-size": "30px"});
+                    $("#raw").css({"font-size": "20px"});
                     stopMusic();
                 });
             });
@@ -403,6 +428,40 @@
                 }
             });
 
+            // LINE CHART FOR RAW DATA
+            var ctx4 = document.getElementById('rawChart').getContext('2d');
+            var counter = 0;
+            Chart.defaults.global.animation.duration = 50;
+            var rawChart = new Chart(ctx4, {
+                type: 'line',
+                data: {datasets: [{
+                    label: "Raw Data",
+                    data: []
+                }]},
+                options: {
+                    title: {
+                        display: false,
+                        text: "Raw Chart",
+                        fontSize: 14,
+                        fontFamily: 'Arial',
+                        fontColor: '#FF0000'
+                    },
+
+                    legend: {
+                        display: false
+                    },
+
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                min: 0,
+                                max: 5,
+                                stepsize: 0.5
+                            }
+                        }]
+                    }
+                }
+            });
 
             // FEEDBACK USING TONE.JS
 
@@ -521,6 +580,8 @@
             var timeElapsed = 0;
             var timeForStabilizing = 600; // 60000 for 1 minute
             var timeForMaxFreq = 1000; // 200000 for 3 minutes
+            var maxSpeed = 1;
+            var minSpeed = 0;
             var prevMaxFreqVal = 0;
             var maxFreqIndex = 0;
             var maxVal = 0;
@@ -535,6 +596,7 @@
             var EMAarr = [];
             var SMAarr = [];
 
+            // keys represent index of the fft_data.psd[0].
             // '0' == '7.5', '1' == '7.75', '2' == '8' and so forth.
             var freqsMap = {'0': [], '1': [], '2': [], '3': [],
                             '4': [], '5': [], '6': [], '7': [],
@@ -546,6 +608,13 @@
             var prevEMAVal = 0;
             var smoothingConstant = 0.1;
             var scaleVal = 0;
+
+            // CHECK IF THE RAW DATA IS GOOD
+            $("#raw").click(function() {
+                socket.on('rawData', function(rawData) {
+                    console.log(rawData.data);
+                })
+            });
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
@@ -563,8 +632,6 @@
                     // once stabilized, have the user close his/her eyes and 
                     // run the device for about 3 minutes to extract the alpha
                     // peak frequency index.
-                    // tell the user to close eyes, tell the user to do movements.
-                    // get low and high and finally, get the mid value for the calibration value.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
                         if (loading == true) {
                             loading = false;
@@ -574,15 +641,16 @@
                             extracting = true;
                             $("#extracting-icon").show();
                         }
-                        //getMaxIndex(fft_data);
                         pushValtoFreqMaps(fft_data);
         
                     // once alpha peak frequency is obtained, use that value to calculate EMA
                     // and provide sound feedback based on the EMA values.
+                    // tell the user to close eyes, tell the user to do movements.
+                    // get low and high and finally, get the mid value for the calibration value.
                     } else {
                         if (valuesPushed == false) {
                             valuesPushed = true;
-                            getMaxFrequencyIndex(freqsMap); // update the maxFrequencyIndex.
+                            getMaxFrequencyIndex(fft_data, freqsMap); // update the maxFrequencyIndex.
                         }
                         if (SMAarr.length < period) {
                             SMAarr.push(fft_data.psd[0][maxFreqIndex]);
@@ -608,8 +676,8 @@
                             // if first EMAVal is set and themeFlag is true, then start providing
                             // feedback!
                             if (themeFlag == false) {
-                                playTheme();
                                 themeFlag = true;
+                                playTheme();
                             } else {
                                 prevEMAVal = EMAarr[EMAarr.length - 1];
                                 var feedbackInput = getEMA(fft_data.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
@@ -625,12 +693,13 @@
             // FUNCTIONS FOR SOUND
             function provideRegularFeedback(prevVal, feedbackInput) {
                 // adjust playbackRate accordingly
-                theme.playbackRate = 1 + (feedbackInput - 6) / 6;
-                if (theme.playbackRate > 1) {
+                var tempPlayRate = 1 + (feedbackInput - 2) / 2;
+                if (tempPlayRate > 1) {
                     theme.playbackRate = 1;
-                } 
-                if (theme.playbackRate < 0) {
+                } else if (tempPlayRate < 0) {
                     theme.playbackRate = 0;
+                } else {
+                    theme.playbackRate = tempPlayRate;
                 }
             }
 
@@ -760,7 +829,7 @@
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.labels.shift();
                 }
-                lineChart.data.datasets[0].data.push(fft_data.psd[0][maxFreqIndex]);
+                lineChart.data.datasets[0].data.push(EMAarr[EMAarr.length - 1]);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
@@ -798,6 +867,19 @@
                 pieChart.update();            
             }
 
+            // FUNCTION FOR RAW CHART
+            function updateRawChart(rawChart, rawData) {
+                var length = 100;
+                if (rawChart.data.datasets[0].data.length > length) {
+                    rawChart.data.datasets[0].data.shift();
+                    rawChart.data.labels.shift();
+                }
+                rawChart.data.datasets[0].data.push(rawData.data[0]);
+                rawChart.data.labels.push(counter++);
+                rawChart.update();
+                
+            }
+
             // ACCESSORY FUNCTIONS
             // first SMA(first average) becomes the first EMA.
             function getFirstEMAVal(arr, period) {
@@ -819,7 +901,7 @@
                 }
             }
 
-            function getMaxFrequencyIndex(freqsMap) {
+            function getMaxFrequencyIndex(fft_data, freqsMap) {
                 var tempMaxVal = 0;
                 for (var i = 0; i < fft_data.psd[0].length; i++) {
                     var tempAverage = 0;
