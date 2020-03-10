@@ -519,22 +519,33 @@
             
             const startTime = Date.now();
             var timeElapsed = 0;
-            var timeForStabilizing = 6000; // 60000 for 1 minute
-            var timeForMaxFreq = 10000; // 200000 for 3 minutes
+            var timeForStabilizing = 600; // 60000 for 1 minute
+            var timeForMaxFreq = 1000; // 200000 for 3 minutes
             var prevMaxFreqVal = 0;
             var maxFreqIndex = 0;
             var maxVal = 0;
+            var maxAverage = 0;
             var themeFlag = false;
             var loading = false;
             var extracting = false;
+            var valuesPushed = false;
             var ready = false;
 
             // calculating EMA
             var EMAarr = [];
             var SMAarr = [];
+
+            // '0' == '7.5', '1' == '7.75', '2' == '8' and so forth.
+            var freqsMap = {'0': [], '1': [], '2': [], '3': [],
+                            '4': [], '5': [], '6': [], '7': [],
+                            '8': [], '9': [], '10': [], '11': [],
+                            '12': [], '13': [], '14': [], '15': [],
+                            '16': [], '17': [], '18': [], '19': [],
+                            '20': []};
             const period = 100;
             var prevEMAVal = 0;
-            var smoothingConstant = 0;
+            var smoothingConstant = 0.1;
+            var scaleVal = 0;
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
@@ -552,6 +563,8 @@
                     // once stabilized, have the user close his/her eyes and 
                     // run the device for about 3 minutes to extract the alpha
                     // peak frequency index.
+                    // tell the user to close eyes, tell the user to do movements.
+                    // get low and high and finally, get the mid value for the calibration value.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
                         if (loading == true) {
                             loading = false;
@@ -561,23 +574,29 @@
                             extracting = true;
                             $("#extracting-icon").show();
                         }
-                        getMaxIndex(fft_data);
-                        
+                        //getMaxIndex(fft_data);
+                        pushValtoFreqMaps(fft_data);
+        
                     // once alpha peak frequency is obtained, use that value to calculate EMA
                     // and provide sound feedback based on the EMA values.
                     } else {
+                        if (valuesPushed == false) {
+                            valuesPushed = true;
+                            getMaxFrequencyIndex(freqsMap); // update the maxFrequencyIndex.
+                        }
                         if (SMAarr.length < period) {
                             SMAarr.push(fft_data.psd[0][maxFreqIndex]);
                         } 
                         // insert the first EMA value to the EMAarr.
                         if (SMAarr.length == period - 1 && EMAarr.length == 0) {
-                            SMAarr.push(fft_data[0].psd[0][maxFreqIndex]);
+                            SMAarr.push(fft_data.psd[0][maxFreqIndex]);
                             var firstEMAVal = getFirstEMAVal(SMAarr, period);
                             EMAarr.push(firstEMAVal);
-                            smoothingConstant = getSmoothingConstant(period);
+                            //smoothingConstant = getSmoothingConstant(period);
                         }
 
                         if (EMAarr.length > 0) {
+                            console.log("EMA: ", EMAarr[EMAarr.length - 1]);
                             if (extracting == true) {
                                 extracting = false;
                                 $("#extracting-icon").hide();
@@ -594,8 +613,9 @@
                             } else {
                                 prevEMAVal = EMAarr[EMAarr.length - 1];
                                 var feedbackInput = getEMA(fft_data.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
+                                provideRegularFeedback(prevEMAVal, feedbackInput);
+                                updateMaxFreqLineChart(lineChart, fft_data);
                                 EMAarr.push(feedbackInput);
-                                provideRegularFeedback(feedbackInput);
                             }
                         }
                     }
@@ -603,9 +623,15 @@
             });
 
             // FUNCTIONS FOR SOUND
-            function provideRegularFeedback(feedbackInput) {
+            function provideRegularFeedback(prevVal, feedbackInput) {
                 // adjust playbackRate accordingly
-                return feedbackInput;
+                theme.playbackRate = 1 + (feedbackInput - 6) / 6;
+                if (theme.playbackRate > 1) {
+                    theme.playbackRate = 1;
+                } 
+                if (theme.playbackRate < 0) {
+                    theme.playbackRate = 0;
+                }
             }
 
             function providedStackFeedback(curMaxFreqVal) {
@@ -647,6 +673,7 @@
                 }
             }
 
+            // jquery .change()
             function playBeep() {
                 // changing volume
                 player.toDestination().start();
@@ -710,7 +737,7 @@
                 lineChart.update();
             }
 
-            function updateLineChart2(lineChart, fft_data) {
+            function updateAverageLineChart(lineChart, fft_data) {
                 var averageAlpha = getAlphaAverage(fft_data);
                 var tempVal = fft_data.psd[0][0];
                 var length = 100;
@@ -722,6 +749,18 @@
                     lineChart.data.labels.shift();
                 }
                 lineChart.data.datasets[0].data.push(averageAlpha);
+                lineChart.data.labels.push(counter++);
+                lineChart.update();
+            }
+
+            function updateMaxFreqLineChart(lineChart, fft_data) {
+                var length = 100;
+
+                if (lineChart.data.datasets[0].data.length > length) {
+                    lineChart.data.datasets[0].data.shift();
+                    lineChart.data.labels.shift();
+                }
+                lineChart.data.datasets[0].data.push(fft_data.psd[0][maxFreqIndex]);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
@@ -771,7 +810,26 @@
             }
 
             function getEMA(curVal, prevEMAVal, smoothingConstant) {
-                return (curVal - prevEMAVAL) * multiplier + prevEMAVal;
+                return (curVal - prevEMAVal) * smoothingConstant + prevEMAVal;
+            }
+
+            function pushValtoFreqMaps(fft_data) {
+                for (var i = 0; i < fft_data.psd[0].length; i++) {
+                    freqsMap[i.toString()].push(fft_data[0][i]);
+                }
+            }
+
+            function getMaxFrequencyIndex(freqsMap) {
+                var tempMaxVal = 0;
+                for (var i = 0; i < fft_data.psd[0].length; i++) {
+                    var tempAverage = 0;
+                    var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
+                    tempAverage = total / freqsMap[i.toString()].length;
+                    if (tempAverage > tempMaxVal) {
+                        tempMaxVal = tempAverage;
+                        maxFreqIndex = i;
+                    }
+                }
             }
         </script>
     </body>   
