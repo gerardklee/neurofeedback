@@ -559,13 +559,6 @@
             //var multiplayer = [cello, percussion, ensemble, choir, viola, sitar, violin];
             var multiplayer = [cello, ensemble, percussion];
 
-            /**
-            $("#sound-on").click(function() {
-                playBeep();
-                playMusic();
-            });
-            **/
-
             // using only the theme, use playbackRate as the feedback.
             var theme = new Tone.Player({
                 "url": "http://localhost:3000/music/theme.mp3",
@@ -596,7 +589,7 @@
             var EMAarr = [];
             var SMAarr = [];
 
-            // keys represent index of the fft_data.psd[0].
+            // keys represent index of the fftData.psd[0].
             // '0' == '7.5', '1' == '7.75', '2' == '8' and so forth.
             var freqsMap = {'0': [], '1': [], '2': [], '3': [],
                             '4': [], '5': [], '6': [], '7': [],
@@ -612,14 +605,14 @@
             // CHECK IF THE RAW DATA IS GOOD
             $("#raw").click(function() {
                 socket.on('rawData', function(rawData) {
-                    console.log(rawData.data);
-                })
+                    updateRawChart(rawChart, rawData);
+                });
             });
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
             $("#sound-on").click(function() {
-                socket.on('fft_data', function(fft_data) {
+                socket.on('fftData', function(fftData) {
                     timeElapsed = Date.now() - startTime;
 
                     // run the device for about a minute to stabilize the data.
@@ -641,7 +634,7 @@
                             extracting = true;
                             $("#extracting-icon").show();
                         }
-                        pushValtoFreqMaps(fft_data);
+                        pushValstoFreqMaps(fftData);
         
                     // once alpha peak frequency is obtained, use that value to calculate EMA
                     // and provide sound feedback based on the EMA values.
@@ -650,14 +643,14 @@
                     } else {
                         if (valuesPushed == false) {
                             valuesPushed = true;
-                            getMaxFrequencyIndex(fft_data, freqsMap); // update the maxFrequencyIndex.
+                            getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
                         }
                         if (SMAarr.length < period) {
-                            SMAarr.push(fft_data.psd[0][maxFreqIndex]);
+                            SMAarr.push(fftData.psd[0][maxFreqIndex]);
                         } 
                         // insert the first EMA value to the EMAarr.
                         if (SMAarr.length == period - 1 && EMAarr.length == 0) {
-                            SMAarr.push(fft_data.psd[0][maxFreqIndex]);
+                            SMAarr.push(fftData.psd[0][maxFreqIndex]);
                             var firstEMAVal = getFirstEMAVal(SMAarr, period);
                             EMAarr.push(firstEMAVal);
                             //smoothingConstant = getSmoothingConstant(period);
@@ -680,9 +673,9 @@
                                 playTheme();
                             } else {
                                 prevEMAVal = EMAarr[EMAarr.length - 1];
-                                var feedbackInput = getEMA(fft_data.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
-                                provideRegularFeedback(prevEMAVal, feedbackInput);
-                                updateMaxFreqLineChart(lineChart, fft_data);
+                                var feedbackInput = getEMA(fftData.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
+                                provideRegularFeedback(feedbackInput);
+                                updateMaxFreqLineChart(lineChart, fftData);
                                 EMAarr.push(feedbackInput);
                             }
                         }
@@ -690,8 +683,14 @@
                 });
             });
 
+
             // FUNCTIONS FOR SOUND
-            function provideRegularFeedback(prevVal, feedbackInput) {
+            /**
+             * Provides sound-feedback based on the calculated Exponential Moving Average Values
+             * 
+             * @param {Number} feedbackInput The most recent EMA value
+             **/
+            function provideRegularFeedback(feedbackInput) {
                 // adjust playbackRate accordingly
                 var tempPlayRate = 1 + (feedbackInput - 2) / 2;
                 if (tempPlayRate > 1) {
@@ -703,38 +702,65 @@
                 }
             }
 
-            function providedStackFeedback(curMaxFreqVal) {
+            /**
+             *  Provides sound-feedback using stack of instruments (cellos, violin, etc) based on the
+             *  calculated Exponential Moving Average Values
+             * 
+             *  @param {Number} feedbackInput Last EMA value
+             **/
+            function providedStackFeedback(feedbackInput) {
                 return;
             }
 
-            function getMaxIndex(fft_data) {
+            /**
+             * Get the index of max frequency from fftData.psd[0]
+             * 
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function getMaxIndex(fftData) {
                 if (maxVal == 0) {
-                    maxVal = fft_data.psd[0][0];
+                    maxVal = fftData.psd[0][0];
                 }
 
-                for (var i = 0; i < fft_data.psd[0].length; i++) {
-                    if (fft_data.psd[0][i] > maxVal) {
-                        console.log("here: ", fft_data.psd[0][i]);
+                for (var i = 0; i < fftData.psd[0].length; i++) {
+                    if (fftData.psd[0][i] > maxVal) {
+                        console.log("here: ", fftData.psd[0][i]);
                         maxFreqIndex = i;
-                        maxVal = fft_data.psd[0][i];
+                        maxVal = fftData.psd[0][i];
                     }
                 }
             }
 
+            /**
+             * Plays the song for the regular feedback
+             * 
+             **/
             function playTheme() {
                 theme.toDestination().start();
             }
 
+            /**
+             * Stops the song for the regular feedback
+             * 
+             **/
             function stopTheme()  {
                 theme.mute = true;
             }
 
+            /**
+             * Plays the music for the stack feedback
+             * 
+             **/
             function playMultiPlayer() {
                 for (var instrument = 0; instrument < multiplayer.length; instrument++) {
                     multiplayer[instrument].toDestination().start();
                 }
             }
 
+            /**
+             * Stops the music for the stack feedback
+             * 
+             **/
             function stopMultiPlayer() {
                 console.log("stop music");
                 for (var instrument = 0; instrument < multiplayer.length; instrument++) {
@@ -742,7 +768,11 @@
                 }
             }
 
-            // jquery .change()
+            /**
+             * Plays the beep for the regular feedback and allows the volume controller to change volume
+             * 
+             **/
+            // use jquery .change()
             function playBeep() {
                 // changing volume
                 player.toDestination().start();
@@ -768,22 +798,31 @@
                 }                   
             }
 
+            /**
+             * Stops the beep for the regular feedback
+             * 
+             **/
             function stopBeep() {
-                console.log("stop beep");
                 player.mute = true;
             }
 
             // FUNCTIONS FOR BAR CHART
-            function updateBarChart(barChart, fft_data) {
+            /**
+             * Plots the bar chart with bins of the range between 7.5Hz and 12.5Hz
+             * 
+             * @param {Object} barChart The properties of the bar chart
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function updateBarChart(barChart, fftData) {
                 for (var i = 0; i < barChart.data.datasets.length; i++) {
-                    barChart.data.datasets[i].data[0] = fft_data.psd[0][i];
+                    barChart.data.datasets[i].data[0] = fftData.psd[0][i];
                 }
                 barChart.update();
             }
 
             // FUNCTIONS FOR LINE CHART (D3.JS)
-            function updateLineChart(fft_data) {
-                var averageAlpha = getAlphaAverage(fft_data.psd[0]);
+            function updateLineChart(fftData) {
+                var averageAlpha = getAlphaWaves(fftData.psd[0]);
                 data.push(averageAlpha);
                 path.attr("d", line)
                     .attr("transform", null)
@@ -795,23 +834,35 @@
             }
 
             // FUNCTIONS FOR LINE CHART (CHART.JS)
-            function updateLineChartRaw(lineChart, fft_data) {
+            /**
+             * Plots the line chart with the raw data in microvolts
+             * 
+             * @param {Object} lineChart The properties of the line chart
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function updateLineChartRaw(lineChart, fftData) {
                 var length = 100;
                 if (lineChart.data.datasets[0].data.length > length) {
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.labels.shift();
                 }
-                lineChart.data.datasets[0].data.push(fft_data.data[0]);
+                lineChart.data.datasets[0].data.push(fftData.data[0]);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
 
-            function updateAverageLineChart(lineChart, fft_data) {
-                var averageAlpha = getAlphaAverage(fft_data);
-                var tempVal = fft_data.psd[0][0];
+            /**
+             * Plots the line chart with the alpha waves which is the average of the frequencies between
+             * 7.5Hz and 12.5Hz
+             * 
+             * @param {Object} lineChart The properties of the line chart
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function updateAverageLineChart(lineChart, fftData) {
+                var averageAlpha = getAlphaWaves(fftData);
+                var tempVal = fftData.psd[0][0];
                 var length = 100;
                 var randomVal = Math.random() * 10;
-                console.log("3Hz: ", tempVal);
 
                 if (lineChart.data.datasets[0].data.length > length) {
                     lineChart.data.datasets[0].data.shift();
@@ -822,7 +873,13 @@
                 lineChart.update();
             }
 
-            function updateMaxFreqLineChart(lineChart, fft_data) {
+            /**
+             * Plots the line chart with the most recent EMA value
+             * 
+             * @param {Object} lineChart The properties of the line chart
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function updateMaxFreqLineChart(lineChart, fftData) {
                 var length = 100;
 
                 if (lineChart.data.datasets[0].data.length > length) {
@@ -834,29 +891,48 @@
                 lineChart.update();
             }
 
-            function getAlphaAverage(fft_data) {
+            /**
+             * Calculates the alpha waves by calculating the average of the frequencies between
+             * 7.5Hz and 12.5Hz
+             * 
+             * @param {Object} fftData The object that contains fftData from OpenBCI-Wifi device
+             * @returns {Number} average The average of the frequencies between 7.5Hz and 12.5Hz
+             **/
+            function getAlphaWaves(fftData) {
                 var total = 0;
                 var average = 0;
-                for (var i = 0; i < fft_data.psd[0].length; i++) {
-                    total += fft_data.psd[0][i];
+                for (var i = 0; i < fftData.psd[0].length; i++) {
+                    total += fftData.psd[0][i];
                 }
-                average = total / fft_data.psd[0].length;
+                average = total / fftData.psd[0].length;
                 return average;
             }
 
-            function getBlinksAverage(fft_data) {
+            /**
+             * Calculates the average of the frequencies between 2Hz and 7Hz that represent eye blinks
+             * 
+             * @param {Object} fftData The object that contains fftData from OpenBCI-Wifi device
+             * @returns {Number} average The average of the frequencies between 2Hz and 7Hz
+             **/
+            function getAverageForBlinks(fftData) {
                 var total = 0;
                 var average = 0;
-                for (var i = 0; i < fft_data.psd[1].length; i++) {
-                    total += fft_data.psd[1][i];
+                for (var i = 0; i < fftData.psd[1].length; i++) {
+                    total += fftData.psd[1][i];
                 }
-                average = total / fft_data.psd[1].length;
+                average = total / fftData.psd[1].length;
                 return average;
             }
 
             // FUNCTIONS FOR PIE CHART
-            function updatePieChart(pieChart, fft_data) {
-                for (var i = 0; i < fft_data.psd[0].length; i++) {
+            /**
+             * Plots the pie chart with the frequencies between 7.5Hz and 12.5Hz
+             * 
+             * @param {Object} pieChart The properties of the pie chart
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function updatePieChart(pieChart, fftData) {
+                for (var i = 0; i < fftData.psd[0].length; i++) {
                     if (tracker == 1) {
                         pieChart.data.datasets[0].data.push(Math.random() * 10);
                     } else {
@@ -868,6 +944,12 @@
             }
 
             // FUNCTION FOR RAW CHART
+            /**
+             * Plots the line chart with the raw data in microvolts
+             * 
+             * @param {Object} rawChart The properties of the pie chart
+             * @param {Object} rawData The object that contains raw data from OpenBCI-Wifi device
+             **/
             function updateRawChart(rawChart, rawData) {
                 var length = 100;
                 if (rawChart.data.datasets[0].data.length > length) {
@@ -876,34 +958,66 @@
                 }
                 rawChart.data.datasets[0].data.push(rawData.data[0]);
                 rawChart.data.labels.push(counter++);
-                rawChart.update();
-                
+                rawChart.update(); 
             }
 
             // ACCESSORY FUNCTIONS
+            /**
+             * Calculates the first Exponential Moving Average value
+             * 
+             * @param {Array} arr The array with number of fft data points and the number is 
+             * equal to period
+             * @returns {Number} The average of fft data points in the array
+             **/
             // first SMA(first average) becomes the first EMA.
             function getFirstEMAVal(arr, period) {
                 var total = arr.reduce((a, b) => a + b, 0);
                 return total / period;
             }
 
+            /**
+             * Calculates the smoothing constant
+             * 
+             * @param {Number} period The period
+             * @returns {Number} The smoothing constant
+             **/
             function getSmoothingConstant(period) {
                 return 2 / (period + 1);
             }
 
+            /**
+             * Calculates the Exponential Moving Average value
+             * 
+             * @param {Number} curVal The current fft data point
+             * @param {Number} prevEMAVal The previous EMA value
+             * @param {Number} smoothingConstant The smoothing constant
+             * @returns {Number} The next EMA value
+             **/
             function getEMA(curVal, prevEMAVal, smoothingConstant) {
                 return (curVal - prevEMAVal) * smoothingConstant + prevEMAVal;
             }
 
-            function pushValtoFreqMaps(fft_data) {
-                for (var i = 0; i < fft_data.psd[0].length; i++) {
-                    freqsMap[i.toString()].push(fft_data[0][i]);
+            /**
+             * Inserts the fft values to the map for obtaining the max frequency index
+             * 
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             **/
+            function pushValstoFreqMaps(fftData) {
+                for (var i = 0; i < fftData.psd[0].length; i++) {
+                    freqsMap[i.toString()].push(fftData[0][i]);
                 }
             }
 
-            function getMaxFrequencyIndex(fft_data, freqsMap) {
+            /**
+             * Determines the max frequency index
+             * 
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             * @param {Map} freqsMap The map that contains keys of index(frequency) and the 
+             *              corresponding array with the fft data points
+             **/
+            function getMaxFrequencyIndex(fftData, freqsMap) {
                 var tempMaxVal = 0;
-                for (var i = 0; i < fft_data.psd[0].length; i++) {
+                for (var i = 0; i < fftData.psd[0].length; i++) {
                     var tempAverage = 0;
                     var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
                     tempAverage = total / freqsMap[i.toString()].length;
