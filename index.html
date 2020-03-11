@@ -1020,7 +1020,7 @@
                 for (var i = 0; i < fftData.psd[0].length; i++) {
                     var tempAverage = 0;
                     var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
-                    tempAverage = total / freqsMap[i.toString()].length;
+                    tempAverage = total / freqsMap[i.toString()].length;;
                     if (tempAverage > tempMaxVal) {
                         tempMaxVal = tempAverage;
                         maxFreqIndex = i;
