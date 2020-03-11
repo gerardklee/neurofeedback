@@ -24,8 +24,11 @@ const io = socket(server);
 
 app.use(express.static('./music'));
 app.use(express.static(__dirname));
-sendEEGData();
+
+// SENDING THE DATA
+//sendEEGData();
 //sendAlphaWave();
+sendRawData();
 //sendMockData();
 //sendRawData();
 
@@ -43,20 +46,20 @@ async function sendEEGData() {
     // duration must be equal to number of bins
     // 1024 for 0.25 frequency resolution
     // 1280 for 0.2 frequency resolution
-    // 3 - 8 for eye blinks
+    // 2 - 7 for eye blinks
     // 7.5 - 12.5 for alpha
     // 256 to make the amplitude go down fast
     // 25 is the optimal interval
 
     wifi.stream.pipe(
         voltsToMicrovolts(),
-        epoch({ duration: 1024, interval: 256, samplingRate: 256 }),
+        epoch({ duration: 1024, interval: 25, samplingRate: 256 }),
         fft({ bins: 1024 }),
-        sliceFFT([3, 8])
+        sliceFFT([7.5, 12.5])
     ).subscribe(data => 
         {
-            io.emit("fft_data", data);
-            console.log("3Hz: ", data.psd[0][0]);
+            io.emit("fftData", data);
+            //console.log("3Hz: ", data.psd[0][0]);
         }
     );
 }
@@ -72,6 +75,7 @@ async function sendRawData() {
     ).subscribe(data => 
         {
             console.log(data);
+            io.emit("rawData", data);
         }
     );
 }
@@ -96,7 +100,7 @@ async function sendAlphaWave() {
 
 async function sendMockData() {
     console.log("sending mock data..");
-    setInterval(() => io.emit('fft_data', data1), 100);
+    setInterval(() => io.emit('fftData', data1), 100);
 }
 
 async function start() {
