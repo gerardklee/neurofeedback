@@ -41,7 +41,6 @@
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
         
         <script>
-            console.log("server connected");
             $(document).ready(function() {
                 $("#loading-icon").hide();
                 $("#extracting-icon").hide();
@@ -580,7 +579,7 @@
             var maxVal = 0;
             var themeFlag = false;
             var loading = false;
-            var extracting = false;
+            var extractingAPF = false;
             var valuesPushed = false;
             var ready = false;
 
@@ -601,6 +600,9 @@
             var prevEMAVal = 0;
             var smoothingConstant = 0.1;
             var scaleVal = 0;
+
+            // letting the user know what frequency with text-to-speech
+            var msg = new SpeechSynthesisUtterance('');
 
             // CHECK IF THE RAW DATA IS GOOD
             $("#raw").click(function() {
@@ -631,9 +633,11 @@
                             loading = false;
                             $("#loading-icon").hide();
                         }
-                        if (extracting == false) {
-                            extracting = true;
+                        if (extractingAPF == false) {
+                            extractingAPF = true;
                             $("#extracting-icon").show();
+                            msg.text = "extracting your alpha peak frequency. Please wait for 3 minutes";
+                            window.speechSynthesis.speak(msg);
                         }
                         pushValstoFreqsMap(fftData, freqsMap);
 
@@ -660,13 +664,18 @@
 
                         if (EMAarr.length > 0) {
                             //console.log("EMA: ", EMAarr[EMAarr.length - 1]);
-                            if (extracting == true) {
-                                extracting = false;
+                            if (extractingAPF == true) {
+                                extractingAPF = false;
                                 $("#extracting-icon").hide();
                             }
                             if (ready == false) {
                                 ready = true;
                                 $("#ready-icon").show();
+                                const APF = 7.5 + maxFreqIndex * 0.25;
+                                msg.text = "Your alpha peak frequency is " + APF + "hertz";
+                                window.speechSynthesis.speak(msg);
+                                msg.text = "Feedback will begin";
+                                window.speechSynthesis.speak(msg); 
                             }
                             // if first EMAVal is set and themeFlag is true, then start providing
                             // feedback!
