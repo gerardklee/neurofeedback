@@ -1,16 +1,6 @@
 // EEG data variables
 const { Wifi } = require('openbci-observable');
-const { voltsToMicrovolts, bufferFFT, powerByBand, sliceFFT, epoch, fft } = require('@neurosity/pipes');
-const data1 = {"psd":[[27.197596442311976,23.479118879048993,19.781206817947567,15.643339824322986,12.638206260596553,11.081112933731703,8.730078767878478,1,2,3,4,5,6,37,8,9,10,11,12,13,14],
-[53.29126980547793,51.578601544362776,43.10380950455574,33.91020488217584,89.68125343001996,69.41522429915457,69.83147361181165],
-[0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0]
-],
-"freqs":[7.5,7.75,8,8.25,8.5,8.75,9,9.25,9.5,9.75,10,10.25,10.5,10.75,11,11.25,11.5,11.75,12,12.25,12.5],"info":{"startTime":1582042659234,"samplingRate":256}};
+const { voltsToMicrovolts, bufferFFT, powerByBand, sliceFFT, epoch, fft, bandpassFilter, notchFilter } = require('@neurosity/pipes');
 
 // variables for local server
 const express = require('express');
@@ -26,11 +16,10 @@ app.use(express.static('./music'));
 app.use(express.static(__dirname));
 
 // SENDING THE DATA
-//sendEEGData();
+sendEEGData();
 //sendAlphaWave();
-sendRawData();
-//sendMockData();
 //sendRawData();
+//sendMockData();
 
 // server functions
 async function sendEEGData() {
@@ -54,12 +43,13 @@ async function sendEEGData() {
     wifi.stream.pipe(
         voltsToMicrovolts(),
         epoch({ duration: 1024, interval: 25, samplingRate: 256 }),
+        bandpassFilter({ cutoffFrequencies: [7.25, 12.5], nbChannels: 8 }),
+        notchFilter({ cutoffFrequency: 60, nbChannels: 8, samplingRate: 256 }),
         fft({ bins: 1024 }),
         sliceFFT([7.5, 12.5])
     ).subscribe(data => 
         {
             io.emit("fftData", data);
-            //console.log("3Hz: ", data.psd[0][0]);
         }
     );
 }
