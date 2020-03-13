@@ -401,12 +401,12 @@
             var pieChart = new Chart(ctx3, {
                 type: 'doughnut',
                 data: {
-                    labels: ['7.5Hz', '7.75HZ',
-                             '8Hz', '8.25Hz', '8.5Hz', '8.75HZ',
-                             '9Hz', '9.25Hz', '9.5Hz', '9.75HZ',
-                             '10Hz', '10.25Hz', '10.5Hz', '10.75HZ',
-                             '11Hz', '11.25Hz', '11.5Hz', '11.75HZ',
-                             '12Hz', '12.25Hz', '12.5Hz'],
+                    labels: ['7.5Hz', '7.75HZ', '8Hz', '8.25Hz', 
+                             '8.5Hz', '8.75HZ', '9Hz', '9.25Hz', 
+                             '9.5Hz', '9.75HZ', '10Hz', '10.25Hz', 
+                             '10.5Hz', '10.75HZ', '11Hz', '11.25Hz', 
+                             '11.5Hz', '11.75HZ', '12Hz', '12.25Hz', 
+                             '12.5Hz'],
                     datasets: [{
                         //data: [1, 2, 3, 4, 5, 6, 7,
                                //8, 9, 10, 11, 12, 13, 14,
@@ -454,8 +454,8 @@
                     scales: {
                         yAxes: [{
                             ticks: {
-                                min: 0,
-                                max: 5,
+                                min: -60000,
+                                max: 0,
                                 stepsize: 0.5
                             }
                         }]
@@ -562,7 +562,7 @@
             // using only the theme, use playbackRate as the feedback.
             var theme = new Tone.Player({
                 "url": "http://localhost:3000/music/theme.mp3",
-                "playbackRate": 1.0,
+                "playbackRate": 0,
                 "mute": false,
                 "loop": true,
                 "loopStart": loopStart,
@@ -571,14 +571,13 @@
             
             const startTime = Date.now();
             var timeElapsed = 0;
-            var timeForStabilizing = 600; // 60000 for 1 minute
-            var timeForMaxFreq = 1000; // 200000 for 3 minutes
+            var timeForStabilizing = 60000; // 60000 for 1 minute.
+            var timeForMaxFreq = 200000; // 200000 for 3 minutes.
             var maxSpeed = 1;
             var minSpeed = 0;
-            var prevMaxFreqVal = 0;
             var maxFreqIndex = 0;
+            var minFreqIndex = 0;
             var maxVal = 0;
-            var maxAverage = 0;
             var themeFlag = false;
             var loading = false;
             var extracting = false;
@@ -590,7 +589,8 @@
             var SMAarr = [];
 
             // keys represent index of the fftData.psd[0].
-            // '0' == '7.5', '1' == '7.75', '2' == '8' and so forth.
+            // the actual frequency for each index = 7.5 + index * 0.25.
+            // for example, 7.5 + 1 * 0.25 = 7.75.
             var freqsMap = {'0': [], '1': [], '2': [], '3': [],
                             '4': [], '5': [], '6': [], '7': [],
                             '8': [], '9': [], '10': [], '11': [],
@@ -626,6 +626,7 @@
                     // run the device for about 3 minutes to extract the alpha
                     // peak frequency index.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
+                        console.log("stabilizing phase..");
                         if (loading == true) {
                             loading = false;
                             $("#loading-icon").hide();
@@ -634,8 +635,8 @@
                             extracting = true;
                             $("#extracting-icon").show();
                         }
-                        pushValstoFreqMaps(fftData);
-        
+                        pushValstoFreqsMap(fftData, freqsMap);
+
                     // once alpha peak frequency is obtained, use that value to calculate EMA
                     // and provide sound feedback based on the EMA values.
                     // tell the user to close eyes, tell the user to do movements.
@@ -644,6 +645,7 @@
                         if (valuesPushed == false) {
                             valuesPushed = true;
                             getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
+                            console.log(maxFreqIndex);
                         }
                         if (SMAarr.length < period) {
                             SMAarr.push(fftData.psd[0][maxFreqIndex]);
@@ -657,7 +659,7 @@
                         }
 
                         if (EMAarr.length > 0) {
-                            console.log("EMA: ", EMAarr[EMAarr.length - 1]);
+                            //console.log("EMA: ", EMAarr[EMAarr.length - 1]);
                             if (extracting == true) {
                                 extracting = false;
                                 $("#extracting-icon").hide();
@@ -675,8 +677,8 @@
                                 prevEMAVal = EMAarr[EMAarr.length - 1];
                                 var feedbackInput = getEMA(fftData.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
                                 provideRegularFeedback(feedbackInput);
-                                updateMaxFreqLineChart(lineChart, fftData);
                                 EMAarr.push(feedbackInput);
+                                updateMaxFreqLineChart(lineChart, fftData);
                             }
                         }
                     }
@@ -691,7 +693,6 @@
              * @param {Number} feedbackInput The most recent EMA value
              **/
             function provideRegularFeedback(feedbackInput) {
-                // adjust playbackRate accordingly
                 var tempPlayRate = 1 + (feedbackInput - 2) / 2;
                 if (tempPlayRate > 1) {
                     theme.playbackRate = 1;
@@ -1002,9 +1003,9 @@
              * 
              * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
              **/
-            function pushValstoFreqMaps(fftData) {
+            function pushValstoFreqsMap(fftData, freqsMap) {
                 for (var i = 0; i < fftData.psd[0].length; i++) {
-                    freqsMap[i.toString()].push(fftData[0][i]);
+                    freqsMap[i.toString()].push(fftData.psd[0][i]);
                 }
             }
 
@@ -1020,10 +1021,31 @@
                 for (var i = 0; i < fftData.psd[0].length; i++) {
                     var tempAverage = 0;
                     var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
-                    tempAverage = total / freqsMap[i.toString()].length;;
+                    tempAverage = total / freqsMap[i.toString()].length;
                     if (tempAverage > tempMaxVal) {
                         tempMaxVal = tempAverage;
                         maxFreqIndex = i;
+                        console.log("max frequency index: ", maxFreqIndex);
+                    }
+                }
+            }
+
+            /**
+             * Determines the min frequency index
+             *
+             * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
+             * @param {Map} freqsMap The map that contains keys of index(frequency) and the 
+             *              corresponding array with the fft data points
+            **/
+            function getMinFrequencyIndex(fftData, freqsMap) {
+                var tempMinVal = Number.MAX_SAFE_INTEGER;
+                for (var i = 0; i < fftData.psd[0].length; i++) {
+                    var tempAverage = 0;
+                    var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
+                    tempAverage = total / freqsMap[i.toString()].length;
+                    if (tempAverage < tempMinVal) {
+                        tempMinVal = tempAverage;
+                        minFreqIndex = i;
                     }
                 }
             }
