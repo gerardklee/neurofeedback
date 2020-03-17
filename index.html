@@ -680,13 +680,32 @@
 
                                 //const APF = 7.5 + maxFreqIndex * 0.25;
                                 const AMF = 7.5 + minFreqIndex * 0.25;
-                                //msg.text = "Your alpha peak frequency is " + APF + " hertz";
-                                msg.text = "Your alpha minimum frequency is " + AMF + " hertz";
+                                var beforeDecimal = []
+                                var afterDecimal = []
+                                var dotTracker = 0;
 
-                                window.speechSynthesis.speak(msg);
-                                msg.text = "Feedback will begin";
-                                window.speechSynthesis.speak(msg); 
+                                if (APF.toString().includes(".")) {
+                                    for (var i = 0; i < APF.toString().length; i++) {
+                                        if (APF.toString()[i] === ".") {
+                                            dotTracker = i;
+                                        }
+                                    }
+                                    for (var i = 0; i < dotTracker; i++) {
+                                        beforeDecimal.push(APF.toString()[i]);
+                                    }
+                                    for (var i = dotTracker + 1; i < APF.toString().length; i++) {
+                                        afterDecimal.push(APF.toString()[i]);
+                                    }
+                                    msg.text = beforeDecimal.join('') * 1 + "point";
+                                    window.speechSynthesis.speak(msg);
+                                    msg.text = afterDecimal.join('') * 1;
+                                    window.speechSynthesis.speak(msg); 
+                                } else {
+                                    msg.text = APF;
+                                    window.speechSynthesis.speak(msg);
+                                }               
                             }
+                            
                             // if first EMAVal is set and themeFlag is true, then start providing
                             // feedback!
                             if (themeFlag === false) {
