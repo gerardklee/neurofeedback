@@ -618,7 +618,7 @@
 
                     // run the device for about a minute to stabilize the data.
                     if (timeElapsed > 0 && timeElapsed < timeForStabilizing) {
-                        if (loading == false) {
+                        if (loading === false) {
                             loading = true;
                             $("#loading-icon").show();
                         }
@@ -627,11 +627,11 @@
                     // run the device for about 3 minutes to extract the alpha
                     // peak frequency index.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
-                        if (loading == true) {
+                        if (loading === true) {
                             loading = false;
                             $("#loading-icon").hide();
                         }
-                        if (extractingAPF == false) {
+                        if (extractingAPF === false) {
                             extractingAPF = true;
                             //msg.text = "extracting your alpha peak frequency. Please wait for 3 minutes";
                             msg.text = "extracting your alpha minimum frequency. Please wait for 3 minutes";
@@ -645,7 +645,7 @@
                     // tell the user to close eyes, tell the user to do movements.
                     // get low and high and finally, get the mid value for the calibration value.
                     } else {
-                        if (valuesPushed == false) {
+                        if (valuesPushed === false) {
                             valuesPushed = true;
 
                             //getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
@@ -658,7 +658,7 @@
                             
                         } 
                         // insert the first EMA value to the EMAarr.
-                        if (SMAarr.length == period - 1 && EMAarr.length == 0) {
+                        if (SMAarr.length === period - 1 && EMAarr.length === 0) {
 
                             //SMAarr.push(fftData.psd[0][maxFreqIndex]);
                             SMAarr.push(fftData.psd[0][minFreqIndex]);
@@ -670,18 +670,18 @@
 
                         if (EMAarr.length > 0) {
                             //console.log("EMA: ", EMAarr[EMAarr.length - 1]);
-                            if (extractingAPF == true) {
+                            if (extractingAPF === true) {
                                 extractingAPF = false;
                                 $("#extracting-icon").hide();
                             }
-                            if (ready == false) {
+                            if (ready === false) {
                                 ready = true;
                                 $("#ready-icon").show();
 
                                 //const APF = 7.5 + maxFreqIndex * 0.25;
                                 const AMF = 7.5 + minFreqIndex * 0.25;
-                                //msg.text = "Your alpha peak frequency is " + APF + "hertz";
-                                msg.text = "Your alpha minimum frequency is " + AMF + "hertz";
+                                //msg.text = "Your alpha peak frequency is " + APF + " hertz";
+                                msg.text = "Your alpha minimum frequency is " + AMF + " hertz";
 
                                 window.speechSynthesis.speak(msg);
                                 msg.text = "Feedback will begin";
@@ -689,7 +689,7 @@
                             }
                             // if first EMAVal is set and themeFlag is true, then start providing
                             // feedback!
-                            if (themeFlag == false) {
+                            if (themeFlag === false) {
                                 themeFlag = true;
                                 setTimeout(function() {
                                     playTheme();
@@ -743,7 +743,7 @@
              * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
              **/
             function getMaxIndex(fftData) {
-                if (maxVal == 0) {
+                if (maxVal === 0) {
                     maxVal = fftData.psd[0][0];
                 }
 
@@ -958,7 +958,7 @@
              **/
             function updatePieChart(pieChart, fftData) {
                 for (var i = 0; i < fftData.psd[0].length; i++) {
-                    if (tracker == 1) {
+                    if (tracker === 1) {
                         pieChart.data.datasets[0].data.push(Math.random() * 10);
                     } else {
                         pieChart.data.datasets[0].data[i] = Math.random() * 10;
