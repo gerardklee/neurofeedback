@@ -633,8 +633,8 @@
                         }
                         if (extractingAPF === false) {
                             extractingAPF = true;
-                            //msg.text = "extracting your alpha peak frequency. Please wait for 3 minutes";
-                            msg.text = "extracting your alpha minimum frequency. Please wait for 3 minutes";
+                            //msg.text = "extracting your alpha peak frequency. Please close your eyes for 3 minutes";
+                            msg.text = "extracting your alpha minimum frequency. Please close your eyes for 3 minutes";
                             window.speechSynthesis.speak(msg);
                             $("#extracting-icon").show();
                         }
@@ -648,8 +648,8 @@
                         if (valuesPushed === false) {
                             valuesPushed = true;
 
-                            //getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
-                            getMinFrequencyIndex(fftData, freqsMap); // update the minFrequencyIndex.
+                            getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
+                            //getMinFrequencyIndex(fftData, freqsMap); // update the minFrequencyIndex.
 
                         }
                         if (SMAarr.length < period) {
@@ -678,8 +678,8 @@
                                 ready = true;
                                 $("#ready-icon").show();
 
-                                //const APF = 7.5 + maxFreqIndex * 0.25;
-                                const AMF = 7.5 + minFreqIndex * 0.25;
+                                const APF = 7.5 + maxFreqIndex * 0.25;
+                                //const AMF = 7.5 + minFreqIndex * 0.25;
                                 var beforeDecimal = []
                                 var afterDecimal = []
                                 var dotTracker = 0;
@@ -716,8 +716,8 @@
                             } else {
                                 prevEMAVal = EMAarr[EMAarr.length - 1];
 
-                                //var feedbackInput = getEMA(fftData.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
-                                var feedbackInput = getEMA(fftData.psd[0][minFreqIndex], prevEMAVal, smoothingConstant);
+                                var feedbackInput = getEMA(fftData.psd[0][maxFreqIndex], prevEMAVal, smoothingConstant);
+                                //var feedbackInput = getEMA(fftData.psd[0][minFreqIndex], prevEMAVal, smoothingConstant);
 
                                 provideRegularFeedback(feedbackInput);
                                 EMAarr.push(feedbackInput);
