@@ -289,7 +289,7 @@
                         yAxes: [{
                             ticks: {
                                 min: 0,
-                                max: 2,
+                                max: 6,
                                 stepsize: 0.1
                             }
                         }]
@@ -633,8 +633,8 @@
                         }
                         if (extractingAPF === false) {
                             extractingAPF = true;
-                            //msg.text = "extracting your alpha peak frequency. Please close your eyes for 3 minutes";
-                            msg.text = "extracting your alpha minimum frequency. Please close your eyes for 3 minutes";
+                            msg.text = "extracting your alpha peak frequency. Please close your eyes for 3 minutes";
+                            //msg.text = "extracting your alpha minimum frequency. Please close your eyes for 3 minutes";
                             window.speechSynthesis.speak(msg);
                             $("#extracting-icon").show();
                         }
@@ -653,15 +653,15 @@
 
                         }
                         if (SMAarr.length < period) {
-                            //SMAarr.push(fftData.psd[0][maxFreqIndex]);
-                            SMAarr.push(fftData.psd[0][minFreqIndex]);
+                            SMAarr.push(fftData.psd[0][maxFreqIndex]);
+                            //SMAarr.push(fftData.psd[0][minFreqIndex]);
                             
                         } 
                         // insert the first EMA value to the EMAarr.
                         if (SMAarr.length === period - 1 && EMAarr.length === 0) {
 
-                            //SMAarr.push(fftData.psd[0][maxFreqIndex]);
-                            SMAarr.push(fftData.psd[0][minFreqIndex]);
+                            SMAarr.push(fftData.psd[0][maxFreqIndex]);
+                            //SMAarr.push(fftData.psd[0][minFreqIndex]);
 
                             var firstEMAVal = getFirstEMAVal(SMAarr, period);
                             EMAarr.push(firstEMAVal);
@@ -722,6 +722,7 @@
                                 provideRegularFeedback(feedbackInput);
                                 EMAarr.push(feedbackInput);
                                 updateMaxFreqLineChart(lineChart, fftData);
+                                updateBarChart(barChart, fftData, freqsMap);
                             }
                         }
                     }
@@ -857,9 +858,22 @@
              * @param {Object} barChart The properties of the bar chart
              * @param {Object} fftData The object that contains fft data from OpenBCI-Wifi device
              **/
-            function updateBarChart(barChart, fftData) {
+            function updateBarChart(barChart, fftData, freqsMap) {
+                var averagesArray = [];
                 for (var i = 0; i < barChart.data.datasets.length; i++) {
-                    barChart.data.datasets[i].data[0] = fftData.psd[0][i];
+                    freqsMap[i.toString()].shift();
+                }
+
+                pushValstoFreqsMap(fftData, freqsMap);
+
+                for (var i = 0; i < barChart.data.datasets.length; i++) {
+                    var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
+                    var average = total / freqsMap[i.toString()].length;
+                    averagesArray.push(average); 
+                }
+
+                for (var i = 0; i < averagesArray.length; i++) {
+                    barChart.data.datasets[i].data[0] = averagesArray[i];
                 }
                 barChart.update();
             }
