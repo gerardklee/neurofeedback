@@ -508,7 +508,7 @@
             var themeFlag = false;
             var loading = false;
             var extractingAPF = false;
-            var APFObtained = false;
+            var initialAPFObtained = false;
             var ready = false;
 
             // calculating EMA
@@ -529,15 +529,10 @@
             var smoothingConstant = 0.1;
             var scaleVal = 0;
 
+            APFArray = [];
+
             // letting the user know what frequency with text-to-speech
             var msg = new SpeechSynthesisUtterance('');
-
-            // CHECK IF THE RAW DATA IS GOOD
-            $("#raw").click(function() {
-                socket.on('rawData', function(rawData) {
-                    updateRawChart(rawChart, rawData);
-                });
-            });
 
             // GET DATA FROM THE SERVER
             // alpha range is gray channel and eye blink is purple channel.
@@ -571,14 +566,14 @@
                     // once the initial alpha peak frequency is obtained, we will use that index
                     // to see if the alpha peak frequency gets faster/slower as time goes on.
                     } else {
-                        if (APFObtained === false) {
-                            APFObtained = true;
+                        if (initialAPFObtained === false) {
+                            initialAPFObtained = true;
                             getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
                             const initialAPF = 7.5 + maxFreqIndex * 0.25;
                             var beforeDecimal = [];
                             var afterDecimal = [];
 
-                            // say the alpha peak frequency.
+                            // say the initial alpha peak frequency.
                             if (initialAPF.toString().includes(".")) {
                                 for (var i = 0; i < initialAPF.toString().length; i++) {
                                     if (initialAPF.toString()[i] === ".") {
@@ -605,7 +600,6 @@
                                 window.speechSynthesis.speak(msg);
                             } 
                         } else {
-                            var maxAverage = 0;
                             if (extractingAPF === true) {
                                 extractingAPF = false;
                                 $("#extracting-icon").hide();
@@ -616,28 +610,43 @@
                             }
                             shiftArray(freqsMap);
                             pushValstoFreqsMap(fftData, freqsMap);
-                            var movingAPF = getMaxAverageIndex(freqsMap);
-
+                            var movingAPF = getMovingAPF(freqsMap);
+                            APFArray.push(movingAPF);
+                            updateMovingAPFLineChart(lineChart, movingAPF);
+                            provideRegularFeedback(movingAPF);
                         }
                     }
                 });
             });
 
-
             // FUNCTIONS FOR SOUND FEEDBACK
             /**
-             * Provides sound-feedback based on the calculated Exponential Moving Average values
+             * Provides sound-feedback based on the moving alpha peak frequency
              * 
-             * @param {Number} feedbackInput The most recent EMA value
+             * @param {Number} feedbackInput Current alpha peak frequency
              **/
             function provideRegularFeedback(feedbackInput) {
-                var tempPlayRate = 1 + (feedbackInput - 2) / 2;
-                if (tempPlayRate > 1) {
-                    theme.playbackRate = 1;
-                } else if (tempPlayRate < 0) {
-                    theme.playbackRate = 0;
+                var feedbackValues = [0, 0.05, 0.1, 0.15, 0.2, 0.25,
+                                      0.3, 0.35, 0.4, 0.45, 0.5,
+                                      0.55, 0.6, 0.65, 0.7, 0.75,
+                                      0.8, 0.85, 0.9, 0.95, 1];
+
+                // get the difference of most current APF and the previous APF
+                var APFDifference = APFArray[APFArray.length - 1] - APFArray[APFArray.length - 2];
+
+                var feedbackIndex = (APFDifference - 7.5) / 0.25;
+                if (APFArray.length === 1) {
+                    return;
+                }
+                if (APFDifference === 0) {
+                    return;
+                }
+                if (feedbackIndex > 0) {
+                    theme.playbackRate += feedbackValues[feedbackIndex];
+                } else if (feedbackIndex < 0) {
+                    theme.playbackRate -= feedbackValues[-(feedbackIndex)];
                 } else {
-                    theme.playbackRate = tempPlayRate;
+                    return;
                 }
             }
 
@@ -976,7 +985,7 @@
                 }
             }
 
-            function getMaxAverageIndex(freqsMap) {
+            function getMovingAPF(freqsMap) {
                 var maxAverage = 0;
                 var maxAverageIndex = 0;
                 for (var i = 0; i < fftData.psd[0].length; i++) {
@@ -996,14 +1005,14 @@
                 }
             }
 
-            function updateMaxFreqLineChart(lineChart, fftData) {
+            function updateMovingAPFLineChart(lineChart, movingAPF) {
                 var length = 100;
 
                 if (lineChart.data.datasets[0].data.length > length) {
                     lineChart.data.datasets[0].data.shift();
                     lineChart.data.labels.shift();
                 }
-                lineChart.data.datasets[0].data.push(EMAarr[EMAarr.length - 1]);
+                lineChart.data.datasets[0].data.push(movingAPF);
                 lineChart.data.labels.push(counter++);
                 lineChart.update();
             }
