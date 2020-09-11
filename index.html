@@ -15,22 +15,24 @@
             <button type="button" class="fa fa-bar-chart" style="font-size:20px" id="bar"></button>
             <button type="button" class="fa fa-area-chart" style="font-size:20px" id="line"></button>
             <button type="button" class="fa fa-pie-chart" style="font-size:20px" id="pie"></button>
-            <button type="button" class="fa fa-line-chart" style="font-size:20px" id="raw"></button>
             <i class="fa fa-spinner fa-spin" style="font-size:40px" id="loading-icon"></i>
             <i class="fa fa-cog fa-spin" style="font-size:40px" id="extracting-icon"></i>
             <i class="fa fa-check" style="font-size:40px" id="ready-icon"></i>
         </div>
-        <div class="slideContainer">
-            <br>
-            <p>Value: <span id="value"></span></p>
-            <input type="range" min="1" max="100" value="1" id="myRange" class="slider">
-        </div>
         <br>
         <div>
-            <canvas id="barChart" height=50 style="display: none"></canvas>
-            <canvas id="lineChart" height=50 style="display: none"></canvas>
-            <canvas id="pieChart" height=50 style="display: none"></canvas>
+            <canvas id="barChart" height=100 style="display: none"></canvas>
+            <canvas id="lineChart" height=100 style="display: none"></canvas>
+            <canvas id="pieChart" height=100 style="display: none"></canvas>
             <canvas id="rawChart" height=50 style="display: none"></canvas>
+        </div>
+        <br>
+        <div id="APF">
+            Today's iAPF: 
+        </div>
+        <span> Maximum Power: </span>
+        <div id="maximumPower">
+
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
@@ -40,6 +42,7 @@
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
         
         <script>
+            console.log("index.html starts");
             $(document).ready(function() {
                 $("#loading-icon").hide();
                 $("#extracting-icon").hide();
@@ -297,67 +300,6 @@
                 }
             });
 
-            /**
-            // LINE CHART USING D3
-            var n      = 40,
-                random = d3.randomNormal(5, 10),
-                //data   = d3.range(n).map(random);
-                data = [16, 17, 18, 19, 20, 16.5, 17.5, 18, 19, 18.5];
-            
-            console.log(data);
-            var step = 10;
-
-            var margin = {top: 50, right: 50, bottom: 50, left: 50},
-                globalX = 0,
-                width = 960 - margin.left - margin.right,
-                height = 500 - margin.top - margin.bottom;
-
-            var xScale = d3.scaleLinear()
-                    .domain([0, n - 1]) // input should be between minimum value to maximum value in dataset
-                    .range([0, width]); // when the input is the max value from the data, it outputs width
-
-            var yScale = d3.scaleLinear()
-                    .domain([d3.min(data), d3.max(data)])
-                    .range([height, 0]);
-
-        
-            var line = d3.line()
-                    .x(function(d, i) { return xScale(i); })
-                    .y(function(d, i) { return yScale(d); })
-                    .curve(d3.curveMonotoneX);
-
-            var canvas = d3.select("body").append("svg")
-                                        .attr("width", width + margin.left + margin.right)
-                                        .attr("height", height + margin.top + margin.bottom)
-                                        .append("g")
-                                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");                      
-             
-            // set the canvas to draw
-            canvas.append("defs").append("clipPath")
-                                .attr("id", "clip")
-                                .append("rect")
-                                .attr("width", width)
-                                .attr("height", height);
-            
-            // manipulate x-axis
-            canvas.append("g")
-                  .attr("class", "x axis")
-                  .attr("transform", "translate(0, " + height + ")")
-                  .call(d3.axisBottom(xScale)); // create axis on the bottom given the scale for x-axis
-
-            // manipulate y-axis
-            canvas.append("g")
-                  .attr("class", "y axis")
-                  .call(d3.axisLeft(yScale)); // create axis on the left given the scale for y-axis
-
-            // path is filled by default. set the fill to none and stroke to black to get rid of fill.
-            var path = canvas.append("g")
-                            .append("path")
-                            .attr("fill", "none")
-                            .attr("stroke", "black")
-                            .data([data]);
-            **/
-
             // LINE CHART USING CHART.JS
             var ctx2 = document.getElementById('lineChart').getContext('2d');
             var counter = 0;
@@ -382,11 +324,23 @@
                     },
 
                     scales: {
+                        xAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: "Number of epochs over time"
+                            }
+                        }],
+
                         yAxes: [{
                             ticks: {
                                 min: 0,
-                                max: 5,
+                                max: 7,
                                 stepsize: 0.5
+                            },
+
+                            scaleLabel: {
+                                display: true,
+                                labelString: "Power in (uV)^2/Hz"
                             }
                         }]
                     }
@@ -428,7 +382,6 @@
 
             // LINE CHART FOR RAW DATA
             var ctx4 = document.getElementById('rawChart').getContext('2d');
-            var counter = 0;
             Chart.defaults.global.animation.duration = 50;
             var rawChart = new Chart(ctx4, {
                 type: 'line',
@@ -569,8 +522,8 @@
             
             const startTime = Date.now();
             var timeElapsed = 0;
-            var timeForStabilizing = 60000; // 60000 for 1 minute.
-            var timeForMaxFreq = 200000; // 200000 for 3 minutes.
+            var timeForStabilizing = 10000; // 60000 for 1 minute.
+            var timeForMaxFreq = 300000; // 200000 for 3 minutes.
             var maxSpeed = 1;
             var minSpeed = 0;
             var maxFreqIndex = 0;
@@ -581,6 +534,10 @@
             var extractingAPF = false;
             var valuesPushed = false;
             var ready = false;
+
+            // update APF and maximumPower
+            var iAPF = 0;
+            var maxPower = 0;
 
             // calculating EMA
             var EMAarr = [];
@@ -595,7 +552,7 @@
                             '12': [], '13': [], '14': [], '15': [],
                             '16': [], '17': [], '18': [], '19': [],
                             '20': []};
-            const period = 100;
+            const period = 1000; // 100 for 25ms and 20 for 1025ms
             var prevEMAVal = 0;
             var smoothingConstant = 0.1;
             var scaleVal = 0;
@@ -627,6 +584,7 @@
                     // run the device for about 3 minutes to extract the alpha
                     // peak frequency index.
                     } else if (timeElapsed > timeForStabilizing && timeElapsed < timeForMaxFreq) {
+                        console.log("collecting data");
                         if (loading === true) {
                             loading = false;
                             $("#loading-icon").hide();
@@ -649,8 +607,7 @@
                             valuesPushed = true;
 
                             getMaxFrequencyIndex(fftData, freqsMap); // update the maxFrequencyIndex.
-                            //getMinFrequencyIndex(fftData, freqsMap); // update the minFrequencyIndex.
-
+                            //getMinFrequencyIndex(fftData, freqsMap); // update the minFrequencyIndex. 
                         }
                         if (SMAarr.length < period) {
                             SMAarr.push(fftData.psd[0][maxFreqIndex]);
@@ -659,7 +616,6 @@
                         } 
                         // insert the first EMA value to the EMAarr.
                         if (SMAarr.length === period - 1 && EMAarr.length === 0) {
-
                             SMAarr.push(fftData.psd[0][maxFreqIndex]);
                             //SMAarr.push(fftData.psd[0][minFreqIndex]);
 
@@ -678,32 +634,11 @@
                                 ready = true;
                                 $("#ready-icon").show();
 
-                                const APF = 7.5 + maxFreqIndex * 0.25;
+                                iAPF = 7.5 + maxFreqIndex * 0.25;
                                 //const AMF = 7.5 + minFreqIndex * 0.25;
-                                var beforeDecimal = []
-                                var afterDecimal = []
-                                var dotTracker = 0;
 
-                                if (APF.toString().includes(".")) {
-                                    for (var i = 0; i < APF.toString().length; i++) {
-                                        if (APF.toString()[i] === ".") {
-                                            dotTracker = i;
-                                        }
-                                    }
-                                    for (var i = 0; i < dotTracker; i++) {
-                                        beforeDecimal.push(APF.toString()[i]);
-                                    }
-                                    for (var i = dotTracker + 1; i < APF.toString().length; i++) {
-                                        afterDecimal.push(APF.toString()[i]);
-                                    }
-                                    msg.text = beforeDecimal.join('') * 1 + "point";
-                                    window.speechSynthesis.speak(msg);
-                                    msg.text = afterDecimal.join('') * 1;
-                                    window.speechSynthesis.speak(msg); 
-                                } else {
-                                    msg.text = APF;
-                                    window.speechSynthesis.speak(msg);
-                                }               
+                                var iAPFDiv = document.getElementById('APF');
+                                iAPFDiv.innerHTML += iAPF;
                             }
                             
                             // if first EMAVal is set and themeFlag is true, then start providing
@@ -722,13 +657,20 @@
                                 provideRegularFeedback(feedbackInput);
                                 EMAarr.push(feedbackInput);
                                 updateMaxFreqLineChart(lineChart, fftData);
-                                updateBarChart(barChart, fftData, freqsMap);
+                                //updateBarChart(barChart, fftData, freqsMap);
+                                
+                                // update maximumPower every iteration
+                                var maxEMAarrVal = Math.max.apply(Math, EMAarr);
+                                if (maxEMAarrVal > maxPower) {
+                                    maxPower = maxEMAarrVal;
+                                    var maximumPowerDiv = document.getElementById('maximumPower');
+                                    maximumPowerDiv.innerHTML = maxPower; 
+                                }
                             }
                         }
                     }
                 });
             });
-
 
             // FUNCTIONS FOR SOUND FEEDBACK
             /**
@@ -875,6 +817,7 @@
                 for (var i = 0; i < averagesArray.length; i++) {
                     barChart.data.datasets[i].data[0] = averagesArray[i];
                 }
+
                 barChart.update();
             }
 
@@ -1074,11 +1017,13 @@
              *              corresponding array with the fft data points
              **/
             function getMaxFrequencyIndex(fftData, freqsMap) {
+                console.log('fftData: ', fftData);
                 var tempMaxVal = 0;
                 for (var i = 0; i < fftData.psd[0].length; i++) {
                     var tempAverage = 0;
                     var total = freqsMap[i.toString()].reduce((a, b) => a + b, 0);
                     tempAverage = total / freqsMap[i.toString()].length;
+                    console.log(i, tempAverage);
                     if (tempAverage > tempMaxVal) {
                         tempMaxVal = tempAverage;
                         maxFreqIndex = i;
